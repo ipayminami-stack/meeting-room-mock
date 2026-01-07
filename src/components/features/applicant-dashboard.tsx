@@ -125,10 +125,11 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         participants: number;
         startTime: Date;
         endTime: Date;
-        externalVisitors?: {
-            companyName: string;
-            visitorNames: string;
-        };
+        participantList?: {
+            name: string;
+            email: string;
+            company?: string;
+        }[];
     }) => {
         if (!selectedRoom) return;
 
@@ -143,7 +144,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
             participants: data.participants,
             status: 'pending',
             createdAt: new Date().toISOString(),
-            ...(data.externalVisitors && { externalVisitors: data.externalVisitors })
+            ...(data.participantList && { participantList: data.participantList })
         };
 
         setReservations([...reservations, newRes]);
@@ -346,6 +347,20 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div className="flex items-center text-muted-foreground">
                                         <UsersIcon className="mr-2 h-4 w-4" /> {res.participants}名
                                     </div>
+                                    {res.participantList && res.participantList.length > 0 && (
+                                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs space-y-2">
+                                            <div className="font-medium text-green-900">参加者リスト</div>
+                                            {res.participantList.map((p, idx) => (
+                                                <div key={idx} className="text-green-700 pl-2 border-l-2 border-green-300">
+                                                    <div className="font-medium">{p.name}</div>
+                                                    <div className="text-xs opacity-80">{p.email}</div>
+                                                    {p.company && (
+                                                        <div className="text-xs opacity-80">📍 {p.company}</div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                     {res.externalVisitors && (
                                         <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-1">
                                             <div className="font-medium text-blue-900">外部来訪者</div>
