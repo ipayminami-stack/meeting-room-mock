@@ -35,11 +35,6 @@ export interface Reservation {
         companyName: string;
         visitorNames: string;
     };
-    participantList?: {
-        name: string;
-        email: string;
-        company?: string;
-    }[];
 }
 
 // For form submission
