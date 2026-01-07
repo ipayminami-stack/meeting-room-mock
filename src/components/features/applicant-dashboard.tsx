@@ -269,24 +269,24 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                 const isPending = res.status === 'pending';
                                                 const room = MOCK_ROOMS.find(r => r.id === res.roomId);
                                                 const startTime = new Date(res.startTime);
-                                                const timeStr = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+                                                const endTime = new Date(res.endTime);
+                                                const timeRange = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}-${endTime.getHours()}:${String(endTime.getMinutes()).padStart(2, '0')}`;
 
                                                 return (
                                                     <div
                                                         key={res.id}
                                                         className={cn(
-                                                            "text-xs px-1.5 py-1 rounded",
+                                                            "text-xs px-2 py-1.5 rounded",
                                                             isMine && isPending ? "bg-orange-100 text-orange-700 border border-orange-300" :
                                                                 isMine ? "bg-primary/20 text-primary border border-primary/30" :
                                                                     "bg-muted text-muted-foreground"
                                                         )}
-                                                        title={`${timeStr} ${room?.name} - ${res.purpose}${isPending ? ' (申請中)' : ''}`}
                                                     >
-                                                        <div className="font-medium truncate">
-                                                            {timeStr} {room?.name.slice(-1)}
-                                                            {isMine && isPending && <span className="ml-1 text-[10px]">⏳</span>}
+                                                        <div className="font-semibold truncate">
+                                                            {timeRange} {room?.name}
+                                                            {isMine && isPending && <span className="ml-1">⏳</span>}
                                                         </div>
-                                                        <div className="truncate opacity-80">{res.purpose}</div>
+                                                        <div className="truncate text-[11px] opacity-90">{res.purpose}</div>
                                                     </div>
                                                 );
                                             })}

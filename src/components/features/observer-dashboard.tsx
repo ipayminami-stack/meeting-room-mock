@@ -268,21 +268,14 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                             >
                                                 <div className="flex-1">
                                                     <div className="flex items-start justify-between mb-2">
-                                                        <div className="font-semibold">{res.purpose}</div>
+                                                        <div>
+                                                            <div className="font-semibold text-base">{timeStr} {roomName}</div>
+                                                            <div className="text-sm text-muted-foreground mt-1">{res.purpose}</div>
+                                                            <div className="text-xs text-muted-foreground mt-1">{dateStr}</div>
+                                                        </div>
                                                         <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
                                                             {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : '却下'}
                                                         </Badge>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                                                        <div className="flex items-center">
-                                                            <MapPin className="mr-1 h-3 w-3" /> {roomName}
-                                                        </div>
-                                                        <div className="flex items-center">
-                                                            <Clock className="mr-1 h-3 w-3" /> {dateStr} {timeStr}
-                                                        </div>
-                                                        <div className="flex items-center">
-                                                            <UsersIcon className="mr-1 h-3 w-3" /> {res.participants}名
-                                                        </div>
                                                     </div>
                                                 </div>
                                                 <ChevronRight className={cn(
