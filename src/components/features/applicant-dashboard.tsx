@@ -6,10 +6,9 @@ import { MOCK_ROOMS, MOCK_RESERVATIONS } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
-import { Plus, Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ReservationModal } from "./reservation-modal";
+import { Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ApplicantDashboardProps {
@@ -19,19 +18,13 @@ interface ApplicantDashboardProps {
 export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
     const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
+    const [isReservationFormModalOpen, setIsReservationFormModalOpen] = useState(false);
     const [selectedDayForDetail, setSelectedDayForDetail] = useState<Date | undefined>(undefined);
     const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
     const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
     const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-
-    // Inline form state
-    const [purpose, setPurpose] = useState("");
-    const [participants, setParticipants] = useState("1");
-    const [hasExternalVisitors, setHasExternalVisitors] = useState(false);
-    const [companyName, setCompanyName] = useState("");
-    const [visitorNames, setVisitorNames] = useState("");
 
     // Filter my reservations
     const myReservations = reservations.filter(r => r.userId === user.id).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -76,11 +69,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         setSelectedRoom(undefined);
         setSelectedStartHour(null);
         setSelectedEndHour(null);
-        setPurpose("");
-        setParticipants("1");
-        setHasExternalVisitors(false);
-        setCompanyName("");
-        setVisitorNames("");
     };
 
     const handleTimeSlotMouseDown = (room: Room, hour: number, isOccupied: boolean) => {
@@ -111,12 +99,10 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         if (isOccupied) return;
 
         if (!selectedRoom || selectedRoom.id !== room.id) {
-            // Start new selection
             setSelectedRoom(room);
             setSelectedStartHour(hour);
             setSelectedEndHour(hour + 1);
         } else if (selectedStartHour !== null && selectedEndHour !== null) {
-            // Extend selection
             if (hour < selectedStartHour) {
                 setSelectedStartHour(hour);
             } else if (hour >= selectedEndHour) {
@@ -129,35 +115,40 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         }
     };
 
-    const handleSubmitInlineReservation = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleProceedToForm = () => {
+        setIsDayDetailModalOpen(false);
+        setIsReservationFormModalOpen(true);
+    };
 
-        if (!selectedRoom || selectedStartHour === null || selectedEndHour === null || !selectedDayForDetail) return;
-
-        const start = new Date(selectedDayForDetail);
-        start.setHours(selectedStartHour, 0, 0, 0);
-
-        const end = new Date(selectedDayForDetail);
-        end.setHours(selectedEndHour, 0, 0, 0);
+    const handleReservationSubmit = (data: {
+        purpose: string;
+        participants: number;
+        startTime: Date;
+        endTime: Date;
+        externalVisitors?: {
+            companyName: string;
+            visitorNames: string;
+        };
+    }) => {
+        if (!selectedRoom) return;
 
         const newRes: Reservation = {
             id: `new-${Date.now()}`,
             roomId: selectedRoom.id,
             userId: user.id,
             userName: user.name,
-            startTime: start.toISOString(),
-            endTime: end.toISOString(),
-            purpose,
-            participants: parseInt(participants),
+            startTime: data.startTime.toISOString(),
+            endTime: data.endTime.toISOString(),
+            purpose: data.purpose,
+            participants: data.participants,
             status: 'pending',
             createdAt: new Date().toISOString(),
-            ...(hasExternalVisitors && companyName && visitorNames && {
-                externalVisitors: { companyName, visitorNames }
-            })
+            ...(data.externalVisitors && { externalVisitors: data.externalVisitors })
         };
 
         setReservations([...reservations, newRes]);
-        setIsDayDetailModalOpen(false);
+        setIsReservationFormModalOpen(false);
+        clearSelection();
     };
 
     const prevMonth = () => {
@@ -171,7 +162,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const days = getDaysInMonth(currentMonth);
     const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
     const monthYearStr = `${currentMonth.getFullYear()}年${currentMonth.getMonth() + 1}月`;
-    const timeSlots = Array.from({ length: 9 }, (_, i) => 10 + i); // 10:00 - 18:00
+    const timeSlots = Array.from({ length: 9 }, (_, i) => 10 + i);
 
     const isSlotOccupied = (room: Room, hour: number) => {
         if (!selectedDayForDetail) return false;
@@ -198,6 +189,13 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const hasSelection = selectedRoom && selectedStartHour !== null && selectedEndHour !== null;
     const selectionDuration = hasSelection ? selectedEndHour! - selectedStartHour! : 0;
 
+    // Prepare selected time for ReservationModal
+    const selectedTimeForModal = hasSelection && selectedDayForDetail ? (() => {
+        const time = new Date(selectedDayForDetail);
+        time.setHours(selectedStartHour!, 0, 0, 0);
+        return time.toISOString();
+    })() : undefined;
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
             {/* Main Content: Monthly Calendar */}
@@ -219,9 +217,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
 
                 <Card>
                     <CardContent className="p-4">
-                        {/* Calendar Grid */}
                         <div className="grid grid-cols-7 gap-1">
-                            {/* Week day headers */}
                             {weekDays.map((day, i) => (
                                 <div key={day} className={cn(
                                     "text-center text-sm font-medium p-2",
@@ -231,7 +227,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                 </div>
                             ))}
 
-                            {/* Calendar days */}
                             {days.map((date, index) => {
                                 if (!date) {
                                     return <div key={`empty-${index}`} className="aspect-square" />;
@@ -263,7 +258,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                             {date.getDate()}
                                         </div>
 
-                                        {/* Reservation details */}
                                         <div className="space-y-1">
                                             {dayReservations.slice(0, 3).map((res) => {
                                                 const isMine = res.userId === user.id;
@@ -296,7 +290,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                             })}
                         </div>
 
-                        {/* Legend */}
                         <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded bg-primary/20 border border-primary/30"></div>
@@ -388,7 +381,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                 </div>
             </div>
 
-            {/* Day Detail Modal with Timeline Drag Selection */}
+            {/* Day Detail Modal with Timeline Selection */}
             <Modal isOpen={isDayDetailModalOpen} onClose={() => setIsDayDetailModalOpen(false)}>
                 {selectedDayForDetail && (
                     <div className="space-y-4">
@@ -406,7 +399,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                             </Button>
                         </div>
 
-                        {/* Selected Time Range Display */}
                         {hasSelection && (
                             <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                                 <div className="text-sm font-medium text-primary">選択中</div>
@@ -419,12 +411,10 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                             </div>
                         )}
 
-                        {/* Instruction */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-900">
                             💡 空いている時間枠を<strong>ドラッグ</strong>または<strong>タップ</strong>して予約時間を選択してください
                         </div>
 
-                        {/* Timeline Selection Grid */}
                         <div className="border rounded-lg overflow-hidden">
                             <div className="max-h-[50vh] overflow-y-auto">
                                 {MOCK_ROOMS.map(room => (
@@ -433,7 +423,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                             {room.name} <span className="text-xs text-muted-foreground">(定員{room.capacity}名)</span>
                                         </div>
                                         <div className="p-3">
-                                            {/* Timeline Bar */}
                                             <div className="flex gap-0.5 select-none">
                                                 {timeSlots.map(hour => {
                                                     const isOccupied = isSlotOccupied(room, hour);
@@ -470,7 +459,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                     );
                                                 })}
                                             </div>
-                                            {/* Hour labels */}
                                             <div className="flex gap-0.5 mt-1">
                                                 {timeSlots.map(hour => (
                                                     <div key={hour} className="flex-1 text-center text-xs text-muted-foreground">
@@ -484,92 +472,31 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                             </div>
                         </div>
 
-                        {/* Inline Reservation Form */}
                         {hasSelection && (
-                            <form onSubmit={handleSubmitInlineReservation} className="border-t pt-4 space-y-4">
-                                <h4 className="font-semibold">予約情報を入力</h4>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="purpose">利用目的</Label>
-                                    <Input
-                                        id="purpose"
-                                        placeholder="例: チーム定例、来客対応"
-                                        value={purpose}
-                                        onChange={(e) => setPurpose(e.target.value)}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="participants">参加人数</Label>
-                                    <Input
-                                        id="participants"
-                                        type="number"
-                                        min="1"
-                                        value={participants}
-                                        onChange={(e) => setParticipants(e.target.value)}
-                                        required
-                                    />
-                                </div>
-
-                                {/* External Visitors */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="hasExternalVisitors"
-                                            checked={hasExternalVisitors}
-                                            onChange={(e) => setHasExternalVisitors(e.target.checked)}
-                                            className="h-4 w-4 rounded border-gray-300"
-                                        />
-                                        <Label htmlFor="hasExternalVisitors" className="cursor-pointer font-normal">
-                                            CoE職員以外の来訪者がいる
-                                        </Label>
-                                    </div>
-
-                                    {hasExternalVisitors && (
-                                        <div className="space-y-3 pl-6 border-l-2 border-primary/20">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="companyName">会社名</Label>
-                                                <Input
-                                                    id="companyName"
-                                                    placeholder="例: ○○株式会社"
-                                                    value={companyName}
-                                                    onChange={(e) => setCompanyName(e.target.value)}
-                                                    required={hasExternalVisitors}
-                                                />
-                                            </div>
-
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="visitorNames">来訪者氏名</Label>
-                                                <Input
-                                                    id="visitorNames"
-                                                    placeholder="例: 山田太郎、佐藤花子"
-                                                    value={visitorNames}
-                                                    onChange={(e) => setVisitorNames(e.target.value)}
-                                                    required={hasExternalVisitors}
-                                                />
-                                                <p className="text-xs text-muted-foreground">
-                                                    複数名の場合は「、」で区切ってください
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex justify-end gap-2 pt-2">
-                                    <Button type="button" variant="ghost" onClick={clearSelection}>
-                                        クリア
-                                    </Button>
-                                    <Button type="submit">
-                                        申請する
-                                    </Button>
-                                </div>
-                            </form>
+                            <div className="border-t pt-4 flex justify-end gap-2">
+                                <Button type="button" variant="ghost" onClick={clearSelection}>
+                                    クリア
+                                </Button>
+                                <Button onClick={handleProceedToForm}>
+                                    次へ →
+                                </Button>
+                            </div>
                         )}
                     </div>
                 )}
             </Modal>
+
+            {/* Reservation Form Modal */}
+            <ReservationModal
+                isOpen={isReservationFormModalOpen}
+                onClose={() => {
+                    setIsReservationFormModalOpen(false);
+                    setIsDayDetailModalOpen(true);
+                }}
+                onSubmit={handleReservationSubmit}
+                selectedRoom={selectedRoom}
+                selectedTime={selectedTimeForModal}
+            />
         </div>
     );
 }
