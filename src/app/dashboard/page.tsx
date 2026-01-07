@@ -4,6 +4,7 @@ import { MOCK_USERS } from "@/lib/data";
 import { Header } from "@/components/layout/header";
 import { ApplicantDashboard } from "@/components/features/applicant-dashboard";
 import { ApproverDashboard } from "@/components/features/approver-dashboard";
+import { ObserverDashboard } from "@/components/features/observer-dashboard";
 import { useRouter, useSearchParams } from "next/navigation";
 import { User } from "@/types";
 import { Suspense, useEffect, useState } from "react";
@@ -61,17 +62,7 @@ function RoleBasedView({ user }: { user: User }) {
       return <ApproverDashboard user={user} />;
     case 'admin':
     case 'observer':
-      return (
-        <div className="space-y-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-3xl font-bold tracking-tight">{user.role.toUpperCase()} Dashboard</h2>
-            <p className="text-muted-foreground">
-              このロールのダッシュボードは現在準備中です。（承認者ビューを表示します）
-            </p>
-          </div>
-          <ApproverDashboard user={user} />
-        </div>
-      );
+      return <ObserverDashboard user={user} />;
     default:
       return <div>Unknown role</div>;
   }
