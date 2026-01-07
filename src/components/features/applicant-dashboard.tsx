@@ -198,7 +198,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     })() : undefined;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-full" onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
             {/* Main Content: Monthly Calendar */}
             <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
@@ -217,8 +217,8 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                 </div>
 
                 <Card>
-                    <CardContent className="p-6">
-                        <div className="grid grid-cols-7 gap-1">
+                    <CardContent className="p-6 overflow-hidden">
+                        <div className="grid grid-cols-7 gap-0.5">
                             {weekDays.map((day, i) => (
                                 <div key={day} className={cn(
                                     "text-center text-sm font-medium p-2",
