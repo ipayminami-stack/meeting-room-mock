@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { ApplicantDashboard } from "@/components/features/applicant-dashboard";
 import { ApproverDashboard } from "@/components/features/approver-dashboard";
 import { ObserverDashboard } from "@/components/features/observer-dashboard";
+import { RoomManagement } from "@/components/features/room-management";
 import { useRouter, useSearchParams } from "next/navigation";
 import { User } from "@/types";
 import { Suspense, useEffect, useState } from "react";
@@ -59,7 +60,13 @@ function RoleBasedView({ user }: { user: User }) {
     case 'applicant':
       return <ApplicantDashboard user={user} />;
     case 'approver':
-      return <ApproverDashboard user={user} />;
+      return (
+        <div className="space-y-8">
+          <ApproverDashboard user={user} />
+          <RoomManagement />
+          <ObserverDashboard user={user} />
+        </div>
+      );
     case 'admin':
       return (
         <div className="space-y-8">
