@@ -246,7 +246,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div
                                         key={date.toISOString()}
                                         className={cn(
-                                            "min-h-[120px] border rounded-lg p-2 cursor-pointer transition-colors relative",
+                                            "min-h-[140px] border rounded-lg p-2 cursor-pointer transition-colors relative overflow-hidden",
                                             isToday && "border-primary border-2",
                                             isPast ? "bg-muted/30" : "hover:bg-accent/50",
                                             dayOfWeek === 0 && "bg-red-50/50",
@@ -282,11 +282,11 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                                     "bg-muted text-muted-foreground"
                                                         )}
                                                     >
-                                                        <div className="font-semibold truncate">
-                                                            {timeRange} {room?.name}
-                                                            {isMine && isPending && <span className="ml-1">⏳</span>}
+                                                        <div className="font-semibold truncate text-[11px] leading-tight">
+                                                            {timeRange} {room?.name.slice(-1)}
+                                                            {isMine && isPending && <span className="ml-0.5">⏳</span>}
                                                         </div>
-                                                        <div className="truncate text-[11px] opacity-90">{res.purpose}</div>
+                                                        <div className="truncate text-[10px] opacity-90 leading-tight">{res.purpose}</div>
                                                     </div>
                                                 );
                                             })}
