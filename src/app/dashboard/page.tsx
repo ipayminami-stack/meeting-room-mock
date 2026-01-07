@@ -63,8 +63,8 @@ function RoleBasedView({ user }: { user: User }) {
       return (
         <div className="space-y-8">
           <ApproverDashboard user={user} />
-          <RoomManagement />
           <ObserverDashboard user={user} />
+          <RoomManagement />
         </div>
       );
     case 'admin':
