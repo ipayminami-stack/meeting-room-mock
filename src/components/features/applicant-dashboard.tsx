@@ -246,7 +246,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div
                                         key={date.toISOString()}
                                         className={cn(
-                                            "min-h-[180px] border rounded-lg p-2 cursor-pointer transition-colors relative overflow-hidden",
+                                            "min-h-[140px] border rounded-lg p-2 cursor-pointer transition-colors relative overflow-hidden",
                                             isToday && "border-primary border-2",
                                             isPast ? "bg-muted/30" : "hover:bg-accent/50",
                                             dayOfWeek === 0 && "bg-red-50/50",
@@ -255,7 +255,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                         onClick={() => handleDayClick(date)}
                                     >
                                         <div className={cn(
-                                            "text-sm font-medium mb-1.5",
+                                            "text-sm font-medium mb-1",
                                             isToday && "text-primary font-bold",
                                             dayOfWeek === 0 && "text-red-600",
                                             dayOfWeek === 6 && "text-blue-600"
@@ -276,16 +276,17 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                     <div
                                                         key={res.id}
                                                         className={cn(
-                                                            "px-1.5 py-1 rounded text-[10px]",
+                                                            "text-xs px-2 py-1.5 rounded",
                                                             isMine && isPending ? "bg-orange-100 text-orange-700 border border-orange-300" :
                                                                 isMine ? "bg-primary/20 text-primary border border-primary/30" :
                                                                     "bg-muted text-muted-foreground"
                                                         )}
                                                     >
-                                                        <div className="font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                                                            {timeRange} {room?.name.slice(-1)}{isMine && isPending && '⏳'}
+                                                        <div className="font-semibold truncate text-[11px] leading-tight">
+                                                            {timeRange} {room?.name.slice(-1)}
+                                                            {isMine && isPending && <span className="ml-0.5">⏳</span>}
                                                         </div>
-                                                        <div className="truncate leading-tight opacity-90">{res.purpose}</div>
+                                                        <div className="truncate text-[10px] opacity-90 leading-tight">{res.purpose}</div>
                                                     </div>
                                                 );
                                             })}
