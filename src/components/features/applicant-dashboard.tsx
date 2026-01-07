@@ -55,7 +55,11 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         const dateStr = date.toDateString();
         return reservations.filter(r => {
             const rDate = new Date(r.startTime);
-            return rDate.toDateString() === dateStr && r.status !== 'cancelled' && r.status !== 'rejected';
+            if (rDate.toDateString() !== dateStr) return false;
+            if (r.status === 'cancelled' || r.status === 'rejected') return false;
+            // Hide others' pending reservations, show only own pending reservations
+            if (r.status === 'pending' && r.userId !== user.id) return false;
+            return true;
         }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     };
 
@@ -262,6 +266,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                         <div className="space-y-1">
                                             {dayReservations.slice(0, 3).map((res) => {
                                                 const isMine = res.userId === user.id;
+                                                const isPending = res.status === 'pending';
                                                 const room = MOCK_ROOMS.find(r => r.id === res.roomId);
                                                 const startTime = new Date(res.startTime);
                                                 const timeStr = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}`;
@@ -271,11 +276,16 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                         key={res.id}
                                                         className={cn(
                                                             "text-xs px-1.5 py-1 rounded",
-                                                            isMine ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
+                                                            isMine && isPending ? "bg-orange-100 text-orange-700 border border-orange-300" :
+                                                                isMine ? "bg-primary/20 text-primary border border-primary/30" :
+                                                                    "bg-muted text-muted-foreground"
                                                         )}
-                                                        title={`${timeStr} ${room?.name} - ${res.purpose}`}
+                                                        title={`${timeStr} ${room?.name} - ${res.purpose}${isPending ? ' (申請中)' : ''}`}
                                                     >
-                                                        <div className="font-medium truncate">{timeStr} {room?.name.slice(-1)}</div>
+                                                        <div className="font-medium truncate">
+                                                            {timeStr} {room?.name.slice(-1)}
+                                                            {isMine && isPending && <span className="ml-1 text-[10px]">⏳</span>}
+                                                        </div>
                                                         <div className="truncate opacity-80">{res.purpose}</div>
                                                     </div>
                                                 );
