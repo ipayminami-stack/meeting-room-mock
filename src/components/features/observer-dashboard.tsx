@@ -21,6 +21,17 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
     const [roomFilter, setRoomFilter] = useState<string>("all");
     const [selectedReservation, setSelectedReservation] = useState<Reservation | undefined>(undefined);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+    const toggleExpanded = (id: string) => {
+        const newExpanded = new Set(expandedIds);
+        if (newExpanded.has(id)) {
+            newExpanded.delete(id);
+        } else {
+            newExpanded.add(id);
+        }
+        setExpandedIds(newExpanded);
+    };
 
     // Calendar utilities
     const getDaysInMonth = (date: Date) => {
@@ -175,7 +186,7 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold">予約一覧</h2>
+                        <h2 className="text-xl font-bold">予約一覧（{monthYearStr}）</h2>
                         <div className="flex gap-2">
                             <select
                                 value={statusFilter}
@@ -201,46 +212,109 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-3">
-                        {filteredReservations.length === 0 && (
-                            <div className="text-center p-8 text-muted-foreground">
-                                該当する予約はありません
-                            </div>
-                        )}
-                        {filteredReservations.map(res => {
-                            const start = new Date(res.startTime);
-                            const end = new Date(res.endTime);
-                            const dateStr = start.toLocaleDateString('ja-JP');
-                            const timeStr = `${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')} - ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
-                            const roomName = MOCK_ROOMS.find(r => r.id === res.roomId)?.name || "不明な部屋";
+                    <div className="space-y-2">
+                        {(() => {
+                            // Filter by current month
+                            const currentMonthReservations = filteredReservations.filter(r => {
+                                const resDate = new Date(r.startTime);
+                                return resDate.getMonth() === currentMonth.getMonth() &&
+                                    resDate.getFullYear() === currentMonth.getFullYear();
+                            });
 
-                            return (
-                                <div
-                                    key={res.id}
-                                    className="border rounded-lg p-4 hover:bg-accent/50 cursor-pointer transition-colors"
-                                    onClick={() => handleReservationClick(res)}
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div className="font-semibold">{res.purpose}</div>
-                                        <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
-                                            {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : '却下'}
-                                        </Badge>
+                            if (currentMonthReservations.length === 0) {
+                                return (
+                                    <div className="text-center p-8 text-muted-foreground">
+                                        {monthYearStr}の予約はありません
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                                        <div className="flex items-center">
-                                            <MapPin className="mr-1 h-3 w-3" /> {roomName}
+                                );
+                            }
+
+                            return currentMonthReservations.map(res => {
+                                const start = new Date(res.startTime);
+                                const end = new Date(res.endTime);
+                                const dateStr = start.toLocaleDateString('ja-JP');
+                                const timeStr = `${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')} - ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
+                                const roomName = MOCK_ROOMS.find(r => r.id === res.roomId)?.name || "不明な部屋";
+                                const isExpanded = expandedIds.has(res.id);
+
+                                return (
+                                    <div key={res.id} className="border rounded-lg overflow-hidden">
+                                        {/* Accordion Header */}
+                                        <div
+                                            className="p-4 hover:bg-accent/50 cursor-pointer transition-colors flex items-center justify-between"
+                                            onClick={() => toggleExpanded(res.id)}
+                                        >
+                                            <div className="flex-1">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="font-semibold">{res.purpose}</div>
+                                                    <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
+                                                        {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : '却下'}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                                    <div className="flex items-center">
+                                                        <MapPin className="mr-1 h-3 w-3" /> {roomName}
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        <Clock className="mr-1 h-3 w-3" /> {dateStr} {timeStr}
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        <UsersIcon className="mr-1 h-3 w-3" /> {res.participants}名
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className={cn(
+                                                "h-5 w-5 transition-transform ml-4",
+                                                isExpanded && "transform rotate-90"
+                                            )} />
                                         </div>
-                                        <div className="flex items-center">
-                                            <Clock className="mr-1 h-3 w-3" /> {dateStr} {timeStr}
-                                        </div>
-                                        <div className="flex items-center">
-                                            <UsersIcon className="mr-1 h-3 w-3" /> {res.participants}名
-                                        </div>
-                                        <div className="text-xs">申請者: {res.userName}</div>
+
+                                        {/* Accordion Content */}
+                                        {isExpanded && (
+                                            <div className="px-4 pb-4 pt-2 bg-muted/20 border-t space-y-3">
+                                                <div className="text-sm">
+                                                    <div className="font-medium mb-1">申請者</div>
+                                                    <div className="text-muted-foreground">{res.userName}</div>
+                                                </div>
+
+                                                {res.externalVisitors && res.externalVisitors.length > 0 && (
+                                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm space-y-2">
+                                                        <div className="font-medium text-blue-900">外部来訪者</div>
+                                                        {res.externalVisitors.map((visitor, idx) => (
+                                                            <div key={idx} className="text-blue-700 pl-2 border-l-2 border-blue-300">
+                                                                <div className="font-medium">{visitor.name}</div>
+                                                                <div className="text-xs opacity-80">📍 {visitor.company}</div>
+                                                                <div className="text-xs opacity-80">📧 {visitor.email}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {res.rejectionReason && (
+                                                    <div className="p-3 bg-destructive/10 text-destructive rounded text-sm">
+                                                        <div className="font-medium">却下理由</div>
+                                                        <div>{res.rejectionReason}</div>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-end pt-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleReservationClick(res);
+                                                        }}
+                                                    >
+                                                        詳細を表示
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            });
+                        })()}
                     </div>
                 </CardContent>
             </Card>
