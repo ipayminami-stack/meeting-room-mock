@@ -246,7 +246,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div
                                         key={date.toISOString()}
                                         className={cn(
-                                            "min-h-[140px] border rounded-lg p-2 cursor-pointer transition-colors relative overflow-hidden",
+                                            "min-h-[160px] border rounded-lg p-1.5 cursor-pointer transition-colors relative overflow-hidden",
                                             isToday && "border-primary border-2",
                                             isPast ? "bg-muted/30" : "hover:bg-accent/50",
                                             dayOfWeek === 0 && "bg-red-50/50",
@@ -263,8 +263,8 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                             {date.getDate()}
                                         </div>
 
-                                        <div className="space-y-1">
-                                            {dayReservations.slice(0, 3).map((res) => {
+                                        <div className="space-y-0.5">
+                                            {dayReservations.slice(0, 4).map((res) => {
                                                 const isMine = res.userId === user.id;
                                                 const isPending = res.status === 'pending';
                                                 const room = MOCK_ROOMS.find(r => r.id === res.roomId);
@@ -276,17 +276,14 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                     <div
                                                         key={res.id}
                                                         className={cn(
-                                                            "text-xs px-2 py-1.5 rounded",
+                                                            "text-[10px] px-1 py-0.5 rounded truncate",
                                                             isMine && isPending ? "bg-orange-100 text-orange-700 border border-orange-300" :
                                                                 isMine ? "bg-primary/20 text-primary border border-primary/30" :
                                                                     "bg-muted text-muted-foreground"
                                                         )}
+                                                        title={`${timeRange} ${room?.name} - ${res.purpose}`}
                                                     >
-                                                        <div className="font-semibold truncate text-[11px] leading-tight">
-                                                            {timeRange} {room?.name.slice(-1)}
-                                                            {isMine && isPending && <span className="ml-0.5">⏳</span>}
-                                                        </div>
-                                                        <div className="truncate text-[10px] opacity-90 leading-tight">{res.purpose}</div>
+                                                        {timeRange} {room?.name.slice(-1)}{isMine && isPending && '⏳'}
                                                     </div>
                                                 );
                                             })}
