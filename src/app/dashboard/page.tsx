@@ -61,6 +61,12 @@ function RoleBasedView({ user }: { user: User }) {
     case 'approver':
       return <ApproverDashboard user={user} />;
     case 'admin':
+      return (
+        <div className="space-y-8">
+          <ApproverDashboard user={user} />
+          <ObserverDashboard user={user} />
+        </div>
+      );
     case 'observer':
       return <ObserverDashboard user={user} />;
     default:
