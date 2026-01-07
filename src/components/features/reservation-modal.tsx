@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Room } from "@/types";
+import { Plus, X } from "lucide-react";
+
+interface ExternalVisitor {
+    company: string;
+    name: string;
+    email: string;
+}
 
 interface ReservationModalProps {
     isOpen: boolean;
@@ -15,10 +22,7 @@ interface ReservationModalProps {
         participants: number;
         startTime: Date;
         endTime: Date;
-        externalVisitors?: {
-            companyName: string;
-            visitorNames: string;
-        };
+        externalVisitors?: ExternalVisitor[];
     }) => void;
     selectedRoom?: Room;
     selectedTime?: string; // ISO string
@@ -29,10 +33,10 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
     const [participants, setParticipants] = useState("1");
     const [roomName, setRoomName] = useState("");
     const [hasExternalVisitors, setHasExternalVisitors] = useState(false);
-    const [companyName, setCompanyName] = useState("");
-    const [visitorNames, setVisitorNames] = useState("");
+    const [externalVisitors, setExternalVisitors] = useState<ExternalVisitor[]>([
+        { company: "", name: "", email: "" }
+    ]);
 
-    // Time range state (in hours: 10-18)
     const [startHour, setStartHour] = useState(10);
     const [endHour, setEndHour] = useState(11);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -40,7 +44,6 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
     const minHour = 10;
     const maxHour = 18;
 
-    // Update form when props change
     useEffect(() => {
         if (selectedRoom) setRoomName(selectedRoom.name);
         if (selectedTime) {
@@ -53,8 +56,7 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
         setPurpose("");
         setParticipants("1");
         setHasExternalVisitors(false);
-        setCompanyName("");
-        setVisitorNames("");
+        setExternalVisitors([{ company: "", name: "", email: "" }]);
     }, [selectedRoom, selectedTime, isOpen]);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -66,55 +68,39 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
         const end = new Date(selectedDate);
         end.setHours(endHour, 0, 0, 0);
 
-        const data: {
-            purpose: string;
-            participants: number;
-            startTime: Date;
-            endTime: Date;
-            externalVisitors?: {
-                companyName: string;
-                visitorNames: string;
-            };
-        } = {
+        const validVisitors = externalVisitors.filter(v => v.company && v.name && v.email);
+
+        const data = {
             purpose,
             participants: parseInt(participants),
             startTime: start,
-            endTime: end
+            endTime: end,
+            ...(hasExternalVisitors && validVisitors.length > 0 && { externalVisitors: validVisitors })
         };
-
-        if (hasExternalVisitors && companyName && visitorNames) {
-            data.externalVisitors = {
-                companyName,
-                visitorNames
-            };
-        }
 
         onSubmit(data);
         onClose();
     };
 
-    const handleStartChange = (value: number) => {
-        setStartHour(value);
-        if (value >= endHour) {
-            setEndHour(Math.min(value + 1, maxHour));
+    const addVisitor = () => {
+        setExternalVisitors([...externalVisitors, { company: "", name: "", email: "" }]);
+    };
+
+    const removeVisitor = (index: number) => {
+        if (externalVisitors.length > 1) {
+            setExternalVisitors(externalVisitors.filter((_, i) => i !== index));
         }
     };
 
-    const handleEndChange = (value: number) => {
-        setEndHour(value);
-        if (value <= startHour) {
-            setStartHour(Math.max(value - 1, minHour));
-        }
+    const updateVisitor = (index: number, field: keyof ExternalVisitor, value: string) => {
+        const updated = [...externalVisitors];
+        updated[index] = { ...updated[index], [field]: value };
+        setExternalVisitors(updated);
     };
-
-    const duration = endHour - startHour;
-    const formattedDate = selectedDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-    const timeRangeText = `${startHour}:00 - ${endHour}:00 (${duration}時間)`;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="新規予約申請">
             <form onSubmit={handleSubmit} className="space-y-4">
-
                 <div className="grid gap-2">
                     <Label htmlFor="purpose">利用目的</Label>
                     <Input
@@ -154,36 +140,78 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
                     </div>
 
                     {hasExternalVisitors && (
-                        <div className="space-y-3 pl-6 border-l-2 border-primary/20">
-                            <div className="grid gap-2">
-                                <Label htmlFor="companyName">会社名</Label>
-                                <Input
-                                    id="companyName"
-                                    placeholder="例: ○○株式会社"
-                                    value={companyName}
-                                    onChange={(e) => setCompanyName(e.target.value)}
-                                    required={hasExternalVisitors}
-                                />
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">来訪者リスト</Label>
+                                <Button type="button" size="sm" variant="outline" onClick={addVisitor}>
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    来訪者を追加
+                                </Button>
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="visitorNames">来訪者氏名</Label>
-                                <Input
-                                    id="visitorNames"
-                                    placeholder="例: 山田太郎、佐藤花子"
-                                    value={visitorNames}
-                                    onChange={(e) => setVisitorNames(e.target.value)}
-                                    required={hasExternalVisitors}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    複数名の場合は「、」で区切ってください
-                                </p>
+                            <div className="space-y-3 max-h-[40vh] overflow-y-auto">
+                                {externalVisitors.map((visitor, index) => (
+                                    <div key={index} className="border rounded-lg p-3 space-y-3 bg-blue-50/50 relative">
+                                        {externalVisitors.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute top-2 right-2 h-6 w-6"
+                                                onClick={() => removeVisitor(index)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        )}
+
+                                        <div className="text-sm font-medium text-muted-foreground">
+                                            来訪者 {index + 1}
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor={`company-${index}`}>会社名</Label>
+                                            <Input
+                                                id={`company-${index}`}
+                                                placeholder="例: ○○株式会社"
+                                                value={visitor.company}
+                                                onChange={(e) => updateVisitor(index, 'company', e.target.value)}
+                                                required={hasExternalVisitors}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor={`name-${index}`}>氏名</Label>
+                                            <Input
+                                                id={`name-${index}`}
+                                                placeholder="例: 山田太郎"
+                                                value={visitor.name}
+                                                onChange={(e) => updateVisitor(index, 'name', e.target.value)}
+                                                required={hasExternalVisitors}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor={`email-${index}`}>メールアドレス</Label>
+                                            <Input
+                                                id={`email-${index}`}
+                                                type="email"
+                                                placeholder="例: yamada@example.com"
+                                                value={visitor.email}
+                                                onChange={(e) => updateVisitor(index, 'email', e.target.value)}
+                                                required={hasExternalVisitors}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                QRコードを送信します
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
                 </div>
 
-                <div className="flex justify-end gap-2 mt-6">
+                <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
                     <Button type="button" variant="ghost" onClick={onClose}>キャンセル</Button>
                     <Button type="submit">申請する</Button>
                 </div>

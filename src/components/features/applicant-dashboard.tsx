@@ -126,9 +126,10 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         startTime: Date;
         endTime: Date;
         externalVisitors?: {
-            companyName: string;
-            visitorNames: string;
-        };
+            company: string;
+            name: string;
+            email: string;
+        }[];
     }) => {
         if (!selectedRoom) return;
 
@@ -346,15 +347,16 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div className="flex items-center text-muted-foreground">
                                         <UsersIcon className="mr-2 h-4 w-4" /> {res.participants}名
                                     </div>
-                                    {res.externalVisitors && (
-                                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-1">
+                                    {res.externalVisitors && res.externalVisitors.length > 0 && (
+                                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-2">
                                             <div className="font-medium text-blue-900">外部来訪者</div>
-                                            <div className="text-blue-700">
-                                                <span className="font-medium">会社:</span> {res.externalVisitors.companyName}
-                                            </div>
-                                            <div className="text-blue-700">
-                                                <span className="font-medium">氏名:</span> {res.externalVisitors.visitorNames}
-                                            </div>
+                                            {res.externalVisitors.map((visitor, idx) => (
+                                                <div key={idx} className="text-blue-700 pl-2 border-l-2 border-blue-300">
+                                                    <div className="font-medium">{visitor.name}</div>
+                                                    <div className="text-xs opacity-80">📍 {visitor.company}</div>
+                                                    <div className="text-xs opacity-80">📧 {visitor.email}</div>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                     {res.rejectionReason && (
