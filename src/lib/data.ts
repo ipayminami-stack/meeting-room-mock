@@ -2,6 +2,7 @@ import { Room, User, Reservation } from '@/types';
 
 export const MOCK_USERS: User[] = [
     { id: '1', name: '叶 太郎', role: 'applicant', department: 'CoE推進部' },
+    { id: '7', name: '叶 次郎', role: 'applicant', department: 'CoE推進部' },
     { id: '2', name: '吉田 課長', role: 'approver', department: 'CoE推進部' },
     { id: '3', name: '中山 次郎', role: 'observer', department: '監査部' },
     { id: '4', name: '吉田 太郎', role: 'admin', department: '情報システム部' },

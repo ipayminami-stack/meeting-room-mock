@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 export default function Home() {
   const roles = [
     { id: '1', name: '叶 太郎', role: 'Applicant', desc: '一般社員 / 申請者' },
+    { id: '7', name: '叶 次郎', role: 'Applicant', desc: '一般社員 / 申請者' },
     { id: '2', name: '吉田 課長', role: 'Approver', desc: '承認者' },
   ];
 
