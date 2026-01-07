@@ -217,7 +217,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                 </div>
 
                 <Card>
-                    <CardContent className="p-4">
+                    <CardContent className="p-6">
                         <div className="grid grid-cols-7 gap-1">
                             {weekDays.map((day, i) => (
                                 <div key={day} className={cn(
