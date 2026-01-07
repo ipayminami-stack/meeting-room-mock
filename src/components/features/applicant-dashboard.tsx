@@ -9,23 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
-import { Plus, Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight, X, Check } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ApplicantDashboardProps {
     user: User;
 }
 
-interface SelectedSlot {
-    roomId: string;
-    hour: number;
-}
-
 export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
     const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
     const [selectedDayForDetail, setSelectedDayForDetail] = useState<Date | undefined>(undefined);
-    const [selectedSlots, setSelectedSlots] = useState<SelectedSlot[]>([]);
+    const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
+    const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
+    const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     // Inline form state
@@ -70,29 +68,63 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
 
     const handleDayClick = (date: Date) => {
         setSelectedDayForDetail(date);
-        setSelectedSlots([]);
+        clearSelection();
+        setIsDayDetailModalOpen(true);
+    };
+
+    const clearSelection = () => {
+        setSelectedRoom(undefined);
+        setSelectedStartHour(null);
+        setSelectedEndHour(null);
         setPurpose("");
         setParticipants("1");
         setHasExternalVisitors(false);
         setCompanyName("");
         setVisitorNames("");
-        setIsDayDetailModalOpen(true);
     };
 
-    const handleSlotClick = (roomId: string, hour: number) => {
-        const slotIndex = selectedSlots.findIndex(s => s.roomId === roomId && s.hour === hour);
+    const handleTimeSlotMouseDown = (room: Room, hour: number, isOccupied: boolean) => {
+        if (isOccupied) return;
+        setIsDragging(true);
+        setSelectedRoom(room);
+        setSelectedStartHour(hour);
+        setSelectedEndHour(hour + 1);
+    };
 
-        if (slotIndex >= 0) {
-            // Deselect
-            setSelectedSlots(selectedSlots.filter((_, i) => i !== slotIndex));
-        } else {
-            // Select - only allow same room
-            if (selectedSlots.length > 0 && selectedSlots[0].roomId !== roomId) {
-                // Different room, replace selection
-                setSelectedSlots([{ roomId, hour }]);
+    const handleTimeSlotMouseEnter = (room: Room, hour: number, isOccupied: boolean) => {
+        if (!isDragging || !selectedRoom || selectedRoom.id !== room.id || isOccupied) return;
+
+        if (selectedStartHour !== null) {
+            if (hour < selectedStartHour) {
+                setSelectedStartHour(hour);
             } else {
-                // Same room or first selection, add to selection
-                setSelectedSlots([...selectedSlots, { roomId, hour }]);
+                setSelectedEndHour(hour + 1);
+            }
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleTimeSlotTouch = (room: Room, hour: number, isOccupied: boolean) => {
+        if (isOccupied) return;
+
+        if (!selectedRoom || selectedRoom.id !== room.id) {
+            // Start new selection
+            setSelectedRoom(room);
+            setSelectedStartHour(hour);
+            setSelectedEndHour(hour + 1);
+        } else if (selectedStartHour !== null && selectedEndHour !== null) {
+            // Extend selection
+            if (hour < selectedStartHour) {
+                setSelectedStartHour(hour);
+            } else if (hour >= selectedEndHour) {
+                setSelectedEndHour(hour + 1);
+            } else if (hour === selectedStartHour - 1) {
+                setSelectedStartHour(hour);
+            } else if (hour === selectedEndHour) {
+                setSelectedEndHour(hour + 1);
             }
         }
     };
@@ -100,23 +132,17 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const handleSubmitInlineReservation = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (selectedSlots.length === 0 || !selectedDayForDetail) return;
-
-        // Sort slots by hour
-        const sortedSlots = [...selectedSlots].sort((a, b) => a.hour - b.hour);
-        const roomId = sortedSlots[0].roomId;
-        const startHour = sortedSlots[0].hour;
-        const endHour = sortedSlots[sortedSlots.length - 1].hour + 1;
+        if (!selectedRoom || selectedStartHour === null || selectedEndHour === null || !selectedDayForDetail) return;
 
         const start = new Date(selectedDayForDetail);
-        start.setHours(startHour, 0, 0, 0);
+        start.setHours(selectedStartHour, 0, 0, 0);
 
         const end = new Date(selectedDayForDetail);
-        end.setHours(endHour, 0, 0, 0);
+        end.setHours(selectedEndHour, 0, 0, 0);
 
         const newRes: Reservation = {
             id: `new-${Date.now()}`,
-            roomId,
+            roomId: selectedRoom.id,
             userId: user.id,
             userName: user.name,
             startTime: start.toISOString(),
@@ -134,15 +160,6 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         setIsDayDetailModalOpen(false);
     };
 
-    const clearSelection = () => {
-        setSelectedSlots([]);
-        setPurpose("");
-        setParticipants("1");
-        setHasExternalVisitors(false);
-        setCompanyName("");
-        setVisitorNames("");
-    };
-
     const prevMonth = () => {
         setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
     };
@@ -156,21 +173,33 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const monthYearStr = `${currentMonth.getFullYear()}年${currentMonth.getMonth() + 1}月`;
     const timeSlots = Array.from({ length: 9 }, (_, i) => 10 + i); // 10:00 - 18:00
 
-    // Calculate selected time range
-    const getSelectedTimeRange = () => {
-        if (selectedSlots.length === 0) return null;
-        const sortedSlots = [...selectedSlots].sort((a, b) => a.hour - b.hour);
-        const room = MOCK_ROOMS.find(r => r.id === sortedSlots[0].roomId);
-        const startHour = sortedSlots[0].hour;
-        const endHour = sortedSlots[sortedSlots.length - 1].hour + 1;
-        const duration = endHour - startHour;
-        return { room, startHour, endHour, duration };
+    const isSlotOccupied = (room: Room, hour: number) => {
+        if (!selectedDayForDetail) return false;
+
+        const slotStart = new Date(selectedDayForDetail);
+        slotStart.setHours(hour, 0, 0, 0);
+        const slotEnd = new Date(selectedDayForDetail);
+        slotEnd.setHours(hour + 1, 0, 0, 0);
+
+        return reservations.some(r => {
+            const rStart = new Date(r.startTime);
+            const rEnd = new Date(r.endTime);
+            return r.roomId === room.id && r.status !== 'cancelled' && r.status !== 'rejected' &&
+                (rStart < slotEnd && rEnd > slotStart);
+        });
     };
 
-    const selectedRange = getSelectedTimeRange();
+    const isSlotSelected = (room: Room, hour: number) => {
+        if (!selectedRoom || selectedRoom.id !== room.id) return false;
+        if (selectedStartHour === null || selectedEndHour === null) return false;
+        return hour >= selectedStartHour && hour < selectedEndHour;
+    };
+
+    const hasSelection = selectedRoom && selectedStartHour !== null && selectedEndHour !== null;
+    const selectionDuration = hasSelection ? selectedEndHour! - selectedStartHour! : 0;
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
             {/* Main Content: Monthly Calendar */}
             <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
@@ -359,7 +388,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                 </div>
             </div>
 
-            {/* Day Detail Modal with Inline Reservation Form */}
+            {/* Day Detail Modal with Timeline Drag Selection */}
             <Modal isOpen={isDayDetailModalOpen} onClose={() => setIsDayDetailModalOpen(false)}>
                 {selectedDayForDetail && (
                     <div className="space-y-4">
@@ -378,77 +407,77 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                         </div>
 
                         {/* Selected Time Range Display */}
-                        {selectedRange && (
+                        {hasSelection && (
                             <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                                 <div className="text-sm font-medium text-primary">選択中</div>
                                 <div className="text-lg font-bold">
-                                    {selectedRange.room?.name} {selectedRange.startHour}:00 - {selectedRange.endHour}:00
+                                    {selectedRoom?.name} {selectedStartHour}:00 - {selectedEndHour}:00
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                    {selectedRange.duration}時間
+                                    {selectionDuration}時間
                                 </div>
                             </div>
                         )}
 
-                        {/* Time Slot Selection Grid */}
+                        {/* Instruction */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-900">
+                            💡 空いている時間枠を<strong>ドラッグ</strong>または<strong>タップ</strong>して予約時間を選択してください
+                        </div>
+
+                        {/* Timeline Selection Grid */}
                         <div className="border rounded-lg overflow-hidden">
-                            <div className="max-h-[40vh] overflow-y-auto">
-                                {timeSlots.map(hour => (
-                                    <div key={hour} className="border-b last:border-b-0">
-                                        <div className="bg-muted/50 px-3 py-2 text-sm font-medium">
-                                            {hour}:00 - {hour + 1}:00
+                            <div className="max-h-[50vh] overflow-y-auto">
+                                {MOCK_ROOMS.map(room => (
+                                    <div key={room.id} className="border-b last:border-b-0">
+                                        <div className="bg-muted/50 px-3 py-2 font-medium text-sm">
+                                            {room.name} <span className="text-xs text-muted-foreground">(定員{room.capacity}名)</span>
                                         </div>
-                                        <div className="grid grid-cols-1 gap-2 p-3">
-                                            {MOCK_ROOMS.map(room => {
-                                                const slotStart = new Date(selectedDayForDetail);
-                                                slotStart.setHours(hour, 0, 0, 0);
-                                                const slotEnd = new Date(selectedDayForDetail);
-                                                slotEnd.setHours(hour + 1, 0, 0, 0);
+                                        <div className="p-3">
+                                            {/* Timeline Bar */}
+                                            <div className="flex gap-0.5 select-none">
+                                                {timeSlots.map(hour => {
+                                                    const isOccupied = isSlotOccupied(room, hour);
+                                                    const isSelected = isSlotSelected(room, hour);
+                                                    const isPast = selectedDayForDetail && new Date(selectedDayForDetail).setHours(hour + 1, 0, 0, 0) < Date.now();
 
-                                                const res = reservations.find(r => {
-                                                    const rStart = new Date(r.startTime);
-                                                    const rEnd = new Date(r.endTime);
-                                                    return r.roomId === room.id && r.status !== 'cancelled' && r.status !== 'rejected' &&
-                                                        (rStart < slotEnd && rEnd > slotStart);
-                                                });
-
-                                                const isMine = res?.userId === user.id;
-                                                const isPast = slotEnd < new Date();
-                                                const isSelected = selectedSlots.some(s => s.roomId === room.id && s.hour === hour);
-
-                                                return (
-                                                    <div
-                                                        key={room.id}
-                                                        className={cn(
-                                                            "flex items-center justify-between p-2 border rounded transition-colors",
-                                                            !res && !isPast && "cursor-pointer hover:bg-accent/50",
-                                                            isSelected && "bg-primary/20 border-primary",
-                                                            res && "bg-muted/50"
-                                                        )}
-                                                        onClick={() => !res && !isPast && handleSlotClick(room.id, hour)}
-                                                    >
-                                                        <div className="flex-1">
-                                                            <div className="font-medium text-sm">{room.name}</div>
-                                                            {res ? (
-                                                                <div className={cn(
-                                                                    "text-xs mt-1",
-                                                                    isMine ? "text-primary" : "text-muted-foreground"
-                                                                )}>
-                                                                    {res.userName} - {res.purpose}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-xs text-green-600 mt-1">空き</div>
+                                                    return (
+                                                        <div
+                                                            key={hour}
+                                                            className={cn(
+                                                                "flex-1 h-12 border rounded cursor-pointer transition-all relative group",
+                                                                isOccupied && "bg-red-100 border-red-300 cursor-not-allowed",
+                                                                !isOccupied && !isPast && "bg-green-50 border-green-200 hover:bg-green-100",
+                                                                isPast && !isOccupied && "bg-gray-100 border-gray-200 cursor-not-allowed",
+                                                                isSelected && "bg-primary border-primary shadow-md scale-105"
                                                             )}
+                                                            onMouseDown={() => handleTimeSlotMouseDown(room, hour, isOccupied || isPast)}
+                                                            onMouseEnter={() => handleTimeSlotMouseEnter(room, hour, isOccupied || isPast)}
+                                                            onTouchStart={() => handleTimeSlotTouch(room, hour, isOccupied || isPast)}
+                                                            title={`${hour}:00-${hour + 1}:00 ${isOccupied ? '予約済' : isPast ? '過去' : '空き'}`}
+                                                        >
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <span className={cn(
+                                                                    "text-xs font-medium",
+                                                                    isSelected && "text-white",
+                                                                    !isSelected && isOccupied && "text-red-700",
+                                                                    !isSelected && !isOccupied && !isPast && "text-green-700",
+                                                                    !isSelected && isPast && "text-gray-500"
+                                                                )}>
+                                                                    {hour}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        {isSelected && (
-                                                            <Check className="h-5 w-5 text-primary" />
-                                                        )}
-                                                        {res && isMine && (
-                                                            <Badge variant="outline" className="bg-primary/10">自分</Badge>
-                                                        )}
+                                                    );
+                                                })}
+                                            </div>
+                                            {/* Hour labels */}
+                                            <div className="flex gap-0.5 mt-1">
+                                                {timeSlots.map(hour => (
+                                                    <div key={hour} className="flex-1 text-center text-xs text-muted-foreground">
+                                                        {hour === 10 || hour === 14 || hour === 18 ? `${hour}:00` : ''}
                                                     </div>
-                                                );
-                                            })}
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -456,7 +485,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                         </div>
 
                         {/* Inline Reservation Form */}
-                        {selectedSlots.length > 0 && (
+                        {hasSelection && (
                             <form onSubmit={handleSubmitInlineReservation} className="border-t pt-4 space-y-4">
                                 <h4 className="font-semibold">予約情報を入力</h4>
 
