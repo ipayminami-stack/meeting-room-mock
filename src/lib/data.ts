@@ -38,6 +38,18 @@ export const MOCK_RESERVATIONS: Reservation[] = [
         status: 'approved',
         createdAt: createDate(-2, 9, 0),
         qrCode: 'mock-qr-code-1',
+        externalVisitors: [
+            {
+                company: '株式会社パートナーズ',
+                name: '佐藤 健一',
+                email: 'sato@partners-inc.jp'
+            },
+            {
+                company: '株式会社パートナーズ',
+                name: '鈴木 美咲',
+                email: 'suzuki@partners-inc.jp'
+            }
+        ]
     },
 
     // 承認済み - 明日
@@ -74,6 +86,13 @@ export const MOCK_RESERVATIONS: Reservation[] = [
         participants: 4,
         status: 'pending',
         createdAt: createDate(0, 8, 30),
+        externalVisitors: [
+            {
+                company: 'テクノロジー株式会社',
+                name: '田中 誠',
+                email: 'tanaka@technology-co.jp'
+            }
+        ]
     },
 
     // 申請中 - 明後日
