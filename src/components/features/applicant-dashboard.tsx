@@ -4,10 +4,11 @@ import { useState } from "react";
 import { User, Room, Reservation } from "@/types";
 import { MOCK_ROOMS, MOCK_RESERVATIONS } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
 import { ReservationModal } from "./reservation-modal";
-import { Plus, Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ApplicantDashboardProps {
@@ -16,9 +17,11 @@ interface ApplicantDashboardProps {
 
 export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+    const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
     const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+    const [selectedDayForDetail, setSelectedDayForDetail] = useState<Date | undefined>(undefined);
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     // Filter my reservations
@@ -35,12 +38,10 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
 
         const days: (Date | null)[] = [];
 
-        // Add empty cells for days before month starts
         for (let i = 0; i < startDayOfWeek; i++) {
             days.push(null);
         }
 
-        // Add all days in month
         for (let i = 1; i <= daysInMonth; i++) {
             days.push(new Date(year, month, i));
         }
@@ -53,22 +54,32 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         return reservations.filter(r => {
             const rDate = new Date(r.startTime);
             return rDate.toDateString() === dateStr && r.status !== 'cancelled' && r.status !== 'rejected';
-        });
+        }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     };
 
     const handleDayClick = (date: Date) => {
-        setSelectedDate(date);
-        setSelectedRoom(MOCK_ROOMS[0]); // Default to first room
-        setIsModalOpen(true);
+        setSelectedDayForDetail(date);
+        setIsDayDetailModalOpen(true);
+    };
+
+    const handleBookFromDayDetail = (room: Room, hour: number) => {
+        if (!selectedDayForDetail) return;
+
+        const time = new Date(selectedDayForDetail);
+        time.setHours(hour, 0, 0, 0);
+
+        setSelectedRoom(room);
+        setSelectedDate(time);
+        setIsDayDetailModalOpen(false);
+        setIsReservationModalOpen(true);
     };
 
     const handleCreate = (data: { purpose: string, participants: number }) => {
         if (!selectedRoom || !selectedDate) return;
 
         const startTime = new Date(selectedDate);
-        startTime.setHours(10, 0, 0, 0); // Default 10:00 start
         const endTime = new Date(startTime);
-        endTime.setHours(11, 0, 0, 0); // 1 hour duration
+        endTime.setHours(startTime.getHours() + 1);
 
         const newRes: Reservation = {
             id: `new-${Date.now()}`,
@@ -97,6 +108,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const days = getDaysInMonth(currentMonth);
     const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
     const monthYearStr = `${currentMonth.getFullYear()}年${currentMonth.getMonth() + 1}月`;
+    const timeSlots = Array.from({ length: 9 }, (_, i) => 10 + i); // 10:00 - 18:00
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -146,13 +158,13 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div
                                         key={date.toISOString()}
                                         className={cn(
-                                            "aspect-square border rounded-lg p-2 cursor-pointer transition-colors relative",
+                                            "min-h-[120px] border rounded-lg p-2 cursor-pointer transition-colors relative",
                                             isToday && "border-primary border-2",
-                                            isPast ? "bg-muted/30 cursor-not-allowed" : "hover:bg-accent/50",
+                                            isPast ? "bg-muted/30" : "hover:bg-accent/50",
                                             dayOfWeek === 0 && "bg-red-50/50",
                                             dayOfWeek === 6 && "bg-blue-50/50"
                                         )}
-                                        onClick={() => !isPast && handleDayClick(date)}
+                                        onClick={() => handleDayClick(date)}
                                     >
                                         <div className={cn(
                                             "text-sm font-medium mb-1",
@@ -163,35 +175,34 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                             {date.getDate()}
                                         </div>
 
-                                        {/* Reservation indicators */}
-                                        <div className="space-y-0.5">
-                                            {dayReservations.slice(0, 2).map((res, i) => {
+                                        {/* Reservation details */}
+                                        <div className="space-y-1">
+                                            {dayReservations.slice(0, 3).map((res) => {
                                                 const isMine = res.userId === user.id;
+                                                const room = MOCK_ROOMS.find(r => r.id === res.roomId);
+                                                const startTime = new Date(res.startTime);
+                                                const timeStr = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+
                                                 return (
                                                     <div
                                                         key={res.id}
                                                         className={cn(
-                                                            "text-xs px-1 py-0.5 rounded truncate",
-                                                            isMine ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                                                            "text-xs px-1.5 py-1 rounded",
+                                                            isMine ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
                                                         )}
-                                                        title={`${res.purpose} (${MOCK_ROOMS.find(r => r.id === res.roomId)?.name})`}
+                                                        title={`${timeStr} ${room?.name} - ${res.purpose}`}
                                                     >
-                                                        {MOCK_ROOMS.find(r => r.id === res.roomId)?.name.slice(-1)}
+                                                        <div className="font-medium truncate">{timeStr} {room?.name.slice(-1)}</div>
+                                                        <div className="truncate opacity-80">{res.purpose}</div>
                                                     </div>
                                                 );
                                             })}
-                                            {dayReservations.length > 2 && (
-                                                <div className="text-xs text-muted-foreground">
-                                                    +{dayReservations.length - 2}
+                                            {dayReservations.length > 3 && (
+                                                <div className="text-xs text-center text-muted-foreground bg-muted/50 rounded py-0.5">
+                                                    他 {dayReservations.length - 3}件
                                                 </div>
                                             )}
                                         </div>
-
-                                        {!isPast && dayReservations.length === 0 && (
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100">
-                                                <Plus className="h-4 w-4 text-primary" />
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -200,7 +211,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                         {/* Legend */}
                         <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded bg-primary/20"></div>
+                                <div className="w-3 h-3 rounded bg-primary/20 border border-primary/30"></div>
                                 <span>自分の予約</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -278,9 +289,91 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                 </div>
             </div>
 
+            {/* Day Detail Modal */}
+            <Modal isOpen={isDayDetailModalOpen} onClose={() => setIsDayDetailModalOpen(false)}>
+                {selectedDayForDetail && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold">
+                                    {selectedDayForDetail.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {selectedDayForDetail.toLocaleDateString('ja-JP', { weekday: 'long' })}
+                                </p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setIsDayDetailModalOpen(false)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        <div className="border rounded-lg overflow-hidden">
+                            {/* Time slot grid */}
+                            <div className="max-h-[60vh] overflow-y-auto">
+                                {timeSlots.map(hour => (
+                                    <div key={hour} className="border-b last:border-b-0">
+                                        <div className="bg-muted/50 px-3 py-2 text-sm font-medium">
+                                            {hour}:00 - {hour + 1}:00
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-2 p-3">
+                                            {MOCK_ROOMS.map(room => {
+                                                const slotStart = new Date(selectedDayForDetail);
+                                                slotStart.setHours(hour, 0, 0, 0);
+                                                const slotEnd = new Date(selectedDayForDetail);
+                                                slotEnd.setHours(hour + 1, 0, 0, 0);
+
+                                                const res = reservations.find(r => {
+                                                    const rStart = new Date(r.startTime);
+                                                    const rEnd = new Date(r.endTime);
+                                                    return r.roomId === room.id && r.status !== 'cancelled' && r.status !== 'rejected' &&
+                                                        (rStart < slotEnd && rEnd > slotStart);
+                                                });
+
+                                                const isMine = res?.userId === user.id;
+                                                const isPast = slotEnd < new Date();
+
+                                                return (
+                                                    <div key={room.id} className="flex items-center justify-between p-2 border rounded hover:bg-accent/50 transition-colors">
+                                                        <div className="flex-1">
+                                                            <div className="font-medium text-sm">{room.name}</div>
+                                                            {res ? (
+                                                                <div className={cn(
+                                                                    "text-xs mt-1",
+                                                                    isMine ? "text-primary" : "text-muted-foreground"
+                                                                )}>
+                                                                    {res.userName} - {res.purpose}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-xs text-green-600 mt-1">空き</div>
+                                                            )}
+                                                        </div>
+                                                        {!res && !isPast && (
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => handleBookFromDayDetail(room, hour)}
+                                                            >
+                                                                予約
+                                                            </Button>
+                                                        )}
+                                                        {res && isMine && (
+                                                            <Badge variant="outline" className="bg-primary/10">自分</Badge>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* Reservation Modal */}
             <ReservationModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isReservationModalOpen}
+                onClose={() => setIsReservationModalOpen(false)}
                 onSubmit={handleCreate}
                 selectedRoom={selectedRoom}
                 selectedTime={selectedDate?.toISOString()}
