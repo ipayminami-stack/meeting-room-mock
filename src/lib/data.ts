@@ -86,8 +86,9 @@ export const MOCK_RESERVATIONS: Reservation[] = [
         endTime: createDate(2, 15, 0),
         purpose: 'マーケティング施策検討会',
         participants: 5,
-        status: 'pending',
+        status: 'approved',
         createdAt: createDate(0, 9, 15),
+        qrCode: 'mock-qr-code-5',
     },
 
     // 申請中 - 3日後
@@ -126,8 +127,9 @@ export const MOCK_RESERVATIONS: Reservation[] = [
         endTime: createDate(4, 12, 0),
         purpose: '週次進捗報告会',
         participants: 4,
-        status: 'pending',
+        status: 'approved',
         createdAt: createDate(0, 11, 20),
+        qrCode: 'mock-qr-code-6',
     },
 
     // 却下済み - 昨日
@@ -221,8 +223,9 @@ export const MOCK_RESERVATIONS: Reservation[] = [
         endTime: createDate(7, 18, 0),
         purpose: '来期計画策定会議',
         participants: 5,
-        status: 'pending',
+        status: 'approved',
         createdAt: createDate(0, 12, 0),
+        qrCode: 'mock-qr-code-7',
         externalVisitors: [
             {
                 company: 'コンサルティング合同会社',
