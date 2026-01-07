@@ -74,7 +74,14 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         setIsReservationModalOpen(true);
     };
 
-    const handleCreate = (data: { purpose: string, participants: number }) => {
+    const handleCreate = (data: {
+        purpose: string;
+        participants: number;
+        externalVisitors?: {
+            companyName: string;
+            visitorNames: string;
+        };
+    }) => {
         if (!selectedRoom || !selectedDate) return;
 
         const startTime = new Date(selectedDate);
@@ -92,6 +99,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
             participants: data.participants,
             status: 'pending',
             createdAt: new Date().toISOString(),
+            ...(data.externalVisitors && { externalVisitors: data.externalVisitors })
         };
 
         setReservations([...reservations, newRes]);
@@ -265,6 +273,17 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div className="flex items-center text-muted-foreground">
                                         <UsersIcon className="mr-2 h-4 w-4" /> {res.participants}名
                                     </div>
+                                    {res.externalVisitors && (
+                                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-1">
+                                            <div className="font-medium text-blue-900">外部来訪者</div>
+                                            <div className="text-blue-700">
+                                                <span className="font-medium">会社:</span> {res.externalVisitors.companyName}
+                                            </div>
+                                            <div className="text-blue-700">
+                                                <span className="font-medium">氏名:</span> {res.externalVisitors.visitorNames}
+                                            </div>
+                                        </div>
+                                    )}
                                     {res.rejectionReason && (
                                         <div className="mt-2 p-2 bg-destructive/10 text-destructive rounded text-xs">
                                             理由: {res.rejectionReason}

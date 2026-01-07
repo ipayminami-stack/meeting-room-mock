@@ -10,7 +10,14 @@ import { Room } from "@/types";
 interface ReservationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: { purpose: string; participants: number }) => void;
+    onSubmit: (data: {
+        purpose: string;
+        participants: number;
+        externalVisitors?: {
+            companyName: string;
+            visitorNames: string;
+        };
+    }) => void;
     selectedRoom?: Room;
     selectedTime?: string; // ISO string
 }
@@ -19,20 +26,43 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
     const [purpose, setPurpose] = useState("");
     const [participants, setParticipants] = useState("1");
     const [roomName, setRoomName] = useState("");
+    const [hasExternalVisitors, setHasExternalVisitors] = useState(false);
+    const [companyName, setCompanyName] = useState("");
+    const [visitorNames, setVisitorNames] = useState("");
 
     // Update form when props change
     useEffect(() => {
         if (selectedRoom) setRoomName(selectedRoom.name);
         setPurpose("");
         setParticipants("1");
+        setHasExternalVisitors(false);
+        setCompanyName("");
+        setVisitorNames("");
     }, [selectedRoom, selectedTime, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({
+
+        const data: {
+            purpose: string;
+            participants: number;
+            externalVisitors?: {
+                companyName: string;
+                visitorNames: string;
+            };
+        } = {
             purpose,
             participants: parseInt(participants)
-        });
+        };
+
+        if (hasExternalVisitors && companyName && visitorNames) {
+            data.externalVisitors = {
+                companyName,
+                visitorNames
+            };
+        }
+
+        onSubmit(data);
         onClose();
     };
 
@@ -74,6 +104,51 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
                         onChange={(e) => setParticipants(e.target.value)}
                         required
                     />
+                </div>
+
+                {/* External Visitors Section */}
+                <div className="border-t pt-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="hasExternalVisitors"
+                            checked={hasExternalVisitors}
+                            onChange={(e) => setHasExternalVisitors(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor="hasExternalVisitors" className="cursor-pointer font-normal">
+                            CoE職員以外の来訪者がいる
+                        </Label>
+                    </div>
+
+                    {hasExternalVisitors && (
+                        <div className="space-y-3 pl-6 border-l-2 border-primary/20">
+                            <div className="grid gap-2">
+                                <Label htmlFor="companyName">会社名</Label>
+                                <Input
+                                    id="companyName"
+                                    placeholder="例: ○○株式会社"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    required={hasExternalVisitors}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="visitorNames">来訪者氏名</Label>
+                                <Input
+                                    id="visitorNames"
+                                    placeholder="例: 山田太郎、佐藤花子"
+                                    value={visitorNames}
+                                    onChange={(e) => setVisitorNames(e.target.value)}
+                                    required={hasExternalVisitors}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    複数名の場合は「、」で区切ってください
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex justify-end gap-2 mt-6">

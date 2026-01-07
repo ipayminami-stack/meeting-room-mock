@@ -31,6 +31,10 @@ export interface Reservation {
     createdAt: string;
     rejectionReason?: string;
     qrCode?: string; // Mock string for QR
+    externalVisitors?: {
+        companyName: string;
+        visitorNames: string;
+    };
 }
 
 // For form submission
