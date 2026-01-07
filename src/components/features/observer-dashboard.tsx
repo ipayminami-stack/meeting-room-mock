@@ -60,7 +60,7 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
         const dateStr = date.toDateString();
         return reservations.filter(r => {
             const rDate = new Date(r.startTime);
-            return rDate.toDateString() === dateStr && r.status !== 'cancelled' && r.status !== 'rejected';
+            return rDate.toDateString() === dateStr && r.status !== 'cancelled' && r.status !== 'rejected' && r.status !== 'pending';
         }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     };
 
@@ -73,6 +73,8 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
     };
 
     const filteredReservations = reservations.filter(r => {
+        // Exclude pending reservations
+        if (r.status === 'pending') return false;
         if (statusFilter !== "all" && r.status !== statusFilter) return false;
         if (roomFilter !== "all" && r.roomId !== roomFilter) return false;
         return true;
@@ -210,7 +212,6 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                 >
                                     <option value="all">全てのステータス</option>
                                     <option value="approved">承認済</option>
-                                    <option value="pending">申請中</option>
                                     <option value="rejected">却下</option>
                                 </select>
                                 <select
