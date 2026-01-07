@@ -6,8 +6,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 
 export default function Home() {
   const roles = [
-    { id: '1', name: '叶 太郎', role: 'Applicant', desc: '一般社員 / 申請者' },
-    { id: '7', name: '叶 次郎', role: 'Applicant', desc: '一般社員 / 申請者' },
+    { id: '1', name: '叶 太郎', role: 'Applicant', desc: 'CoE職員 / 申請者' },
+    { id: '7', name: '叶 次郎', role: 'Applicant', desc: '叶会会員 / 申請者' },
     { id: '2', name: '吉田 課長', role: 'Approver', desc: '承認者' },
   ];
 
@@ -18,15 +18,15 @@ export default function Home() {
         <p className="text-muted-foreground">ログインするロールを選択してください</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
         {roles.map((role) => (
           <Link key={role.id} href={`/dashboard?userId=${role.id}`}>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle>{role.name}</CardTitle>
-                <CardDescription>{role.desc}</CardDescription>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer aspect-square flex flex-col">
+              <CardHeader className="flex-1 flex flex-col justify-center">
+                <CardTitle className="text-center">{role.name}</CardTitle>
+                <CardDescription className="text-center">{role.desc}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-6">
                 <Button className="w-full">ログイン</Button>
               </CardContent>
             </Card>
