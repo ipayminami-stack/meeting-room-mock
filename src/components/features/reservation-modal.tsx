@@ -13,6 +13,8 @@ interface ReservationModalProps {
     onSubmit: (data: {
         purpose: string;
         participants: number;
+        startTime: Date;
+        endTime: Date;
         externalVisitors?: {
             companyName: string;
             visitorNames: string;
@@ -30,29 +32,54 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
     const [companyName, setCompanyName] = useState("");
     const [visitorNames, setVisitorNames] = useState("");
 
+    // Time range state (in hours: 10-18)
+    const [startHour, setStartHour] = useState(10);
+    const [endHour, setEndHour] = useState(11);
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+    const minHour = 10;
+    const maxHour = 18;
+
     // Update form when props change
     useEffect(() => {
         if (selectedRoom) setRoomName(selectedRoom.name);
+        if (selectedTime) {
+            const date = new Date(selectedTime);
+            setSelectedDate(date);
+            const hour = date.getHours();
+            setStartHour(hour >= minHour && hour < maxHour ? hour : minHour);
+            setEndHour(hour >= minHour && hour < maxHour ? hour + 1 : minHour + 1);
+        }
         setPurpose("");
         setParticipants("1");
         setHasExternalVisitors(false);
         setCompanyName("");
         setVisitorNames("");
-    }, [selectedRoom, selectedTime, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [selectedRoom, selectedTime, isOpen]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const start = new Date(selectedDate);
+        start.setHours(startHour, 0, 0, 0);
+
+        const end = new Date(selectedDate);
+        end.setHours(endHour, 0, 0, 0);
+
         const data: {
             purpose: string;
             participants: number;
+            startTime: Date;
+            endTime: Date;
             externalVisitors?: {
                 companyName: string;
                 visitorNames: string;
             };
         } = {
             purpose,
-            participants: parseInt(participants)
+            participants: parseInt(participants),
+            startTime: start,
+            endTime: end
         };
 
         if (hasExternalVisitors && companyName && visitorNames) {
@@ -66,9 +93,23 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
         onClose();
     };
 
-    const formattedDate = selectedTime ? new Date(selectedTime).toLocaleString('ja-JP', {
-        dateStyle: 'medium', timeStyle: 'short'
-    }) : "";
+    const handleStartChange = (value: number) => {
+        setStartHour(value);
+        if (value >= endHour) {
+            setEndHour(Math.min(value + 1, maxHour));
+        }
+    };
+
+    const handleEndChange = (value: number) => {
+        setEndHour(value);
+        if (value <= startHour) {
+            setStartHour(Math.max(value - 1, minHour));
+        }
+    };
+
+    const duration = endHour - startHour;
+    const formattedDate = selectedDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+    const timeRangeText = `${startHour}:00 - ${endHour}:00 (${duration}時間)`;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="新規予約申請">
@@ -79,8 +120,64 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
                 </div>
 
                 <div className="grid gap-2">
-                    <Label>日時</Label>
+                    <Label>日付</Label>
                     <Input value={formattedDate} disabled className="bg-muted" />
+                </div>
+
+                {/* Time Range Slider */}
+                <div className="grid gap-3 p-4 border rounded-lg bg-accent/5">
+                    <Label>利用時間</Label>
+                    <div className="text-center py-2">
+                        <div className="text-2xl font-bold text-primary">{timeRangeText}</div>
+                    </div>
+
+                    {/* Start Time Slider */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>開始時刻</span>
+                            <span className="font-medium text-foreground">{startHour}:00</span>
+                        </div>
+                        <input
+                            type="range"
+                            min={minHour}
+                            max={maxHour - 1}
+                            value={startHour}
+                            onChange={(e) => handleStartChange(parseInt(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                            style={{
+                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((startHour - minHour) / (maxHour - minHour)) * 100}%, #e5e7eb ${((startHour - minHour) / (maxHour - minHour)) * 100}%, #e5e7eb 100%)`
+                            }}
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>10:00</span>
+                            <span>14:00</span>
+                            <span>18:00</span>
+                        </div>
+                    </div>
+
+                    {/* End Time Slider */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>終了時刻</span>
+                            <span className="font-medium text-foreground">{endHour}:00</span>
+                        </div>
+                        <input
+                            type="range"
+                            min={minHour + 1}
+                            max={maxHour}
+                            value={endHour}
+                            onChange={(e) => handleEndChange(parseInt(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                            style={{
+                                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((endHour - minHour) / (maxHour - minHour)) * 100}%, #e5e7eb ${((endHour - minHour) / (maxHour - minHour)) * 100}%, #e5e7eb 100%)`
+                            }}
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>11:00</span>
+                            <span>14:00</span>
+                            <span>18:00</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid gap-2">

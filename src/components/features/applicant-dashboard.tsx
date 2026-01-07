@@ -77,24 +77,22 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const handleCreate = (data: {
         purpose: string;
         participants: number;
+        startTime: Date;
+        endTime: Date;
         externalVisitors?: {
             companyName: string;
             visitorNames: string;
         };
     }) => {
-        if (!selectedRoom || !selectedDate) return;
-
-        const startTime = new Date(selectedDate);
-        const endTime = new Date(startTime);
-        endTime.setHours(startTime.getHours() + 1);
+        if (!selectedRoom) return;
 
         const newRes: Reservation = {
             id: `new-${Date.now()}`,
             roomId: selectedRoom.id,
             userId: user.id,
             userName: user.name,
-            startTime: startTime.toISOString(),
-            endTime: endTime.toISOString(),
+            startTime: data.startTime.toISOString(),
+            endTime: data.endTime.toISOString(),
             purpose: data.purpose,
             participants: data.participants,
             status: 'pending',
