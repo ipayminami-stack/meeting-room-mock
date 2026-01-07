@@ -376,6 +376,20 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                             申請を取り下げる
                                         </Button>
                                     )}
+                                    {res.status === 'approved' && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => {
+                                                if (confirm('承認済みの予約を取り消しますか？\n\nこの操作は取り消せません。')) {
+                                                    setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
+                                                }
+                                            }}
+                                        >
+                                            予約を取り消す
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
                         );
