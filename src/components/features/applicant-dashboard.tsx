@@ -28,9 +28,15 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [isPastReservationsOpen, setIsPastReservationsOpen] = useState(false);
 
     // Filter my reservations
     const myReservations = reservations.filter(r => r.userId === user.id).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Separate upcoming and past reservations
+    const now = new Date();
+    const upcomingReservations = myReservations.filter(r => new Date(r.startTime) >= now);
+    const pastReservations = myReservations.filter(r => new Date(r.startTime) < now);
 
     // Calendar utilities
     const getDaysInMonth = (date: Date) => {
@@ -378,199 +384,262 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                             予約履歴はありません
                         </div>
                     )}
-                    {myReservations.map(res => {
-                        const start = new Date(res.startTime);
-                        const end = new Date(res.endTime);
-                        const dateStr = start.toLocaleDateString('ja-JP');
-                        const timeStr = `${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')} - ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
-                        const roomName = MOCK_ROOMS.find(r => r.id === res.roomId)?.name || "不明な部屋";
 
-                        return (
-                            <Card key={res.id}>
-                                <CardHeader className="p-4 pb-2">
-                                    <div className="flex justify-between items-start gap-2 flex-wrap">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
-                                                {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : res.status === 'cancelled' ? '取消' : '却下'}
-                                            </Badge>
-                                            {res.isChangeRequest && (
-                                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
-                                                    🔄 変更申請
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        {res.status === 'approved' && (
-                                            <Button variant="ghost" size="sm" className="h-6 text-xs">QR表示</Button>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-4 pt-2 space-y-2 text-sm">
-                                    <div className="font-semibold text-lg">{res.purpose}</div>
+                    {/* Upcoming Reservations */}
+                    {upcomingReservations.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-semibold text-muted-foreground">📅 今後の予約 ({upcomingReservations.length}件)</h3>
+                            </div>
+                            {upcomingReservations.map(res => {
+                                const start = new Date(res.startTime);
+                                const end = new Date(res.endTime);
+                                const dateStr = start.toLocaleDateString('ja-JP');
+                                const timeStr = `${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')} - ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
+                                const roomName = MOCK_ROOMS.find(r => r.id === res.roomId)?.name || "不明な部屋";
 
-                                    {res.isChangeRequest && res.changes && res.changes.length > 0 && (
-                                        <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded text-sm space-y-2">
-                                            <div className="font-semibold text-orange-900">📝 変更内容（承認待ち）</div>
-                                            {res.changes.map((change, idx) => {
-                                                const fieldNames: Record<string, string> = {
-                                                    startTime: '開始時刻',
-                                                    endTime: '終了時刻',
-                                                    purpose: '利用目的',
-                                                    participants: '参加人数',
-                                                    externalVisitors: '外部来訪者',
-                                                    roomId: '部屋'
-                                                };
+                                return (
+                                    <Card key={res.id}>
+                                        <CardHeader className="p-4 pb-2">
+                                            <div className="flex justify-between items-start gap-2 flex-wrap">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
+                                                        {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : res.status === 'cancelled' ? '取消' : '却下'}
+                                                    </Badge>
+                                                    {res.isChangeRequest && (
+                                                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
+                                                            🔄 変更申請
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                {res.status === 'approved' && (
+                                                    <Button variant="ghost" size="sm" className="h-6 text-xs">QR表示</Button>
+                                                )}
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="p-4 pt-2 space-y-2 text-sm">
+                                            <div className="font-semibold text-lg">{res.purpose}</div>
 
-                                                let displayValue: React.ReactNode = '';
-                                                if (change.field === 'startTime' || change.field === 'endTime') {
-                                                    const oldTime = new Date(change.oldValue).toLocaleString('ja-JP', {
-                                                        month: '2-digit',
-                                                        day: '2-digit',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    });
-                                                    const newTime = new Date(change.newValue).toLocaleString('ja-JP', {
-                                                        month: '2-digit',
-                                                        day: '2-digit',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    });
-                                                    displayValue = `${oldTime} → ${newTime}`;
-                                                } else if (change.field === 'roomId') {
-                                                    const oldRoom = MOCK_ROOMS.find(r => r.id === change.oldValue)?.name || change.oldValue;
-                                                    const newRoom = MOCK_ROOMS.find(r => r.id === change.newValue)?.name || change.newValue;
-                                                    displayValue = `${oldRoom} → ${newRoom}`;
-                                                } else if (change.field === 'externalVisitors') {
-                                                    const oldVisitors = (change.oldValue as any[]) || [];
-                                                    const newVisitors = (change.newValue as any[]) || [];
+                                            {res.isChangeRequest && res.changes && res.changes.length > 0 && (
+                                                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded text-sm space-y-2">
+                                                    <div className="font-semibold text-orange-900">📝 変更内容（承認待ち）</div>
+                                                    {res.changes.map((change, idx) => {
+                                                        const fieldNames: Record<string, string> = {
+                                                            startTime: '開始時刻',
+                                                            endTime: '終了時刻',
+                                                            purpose: '利用目的',
+                                                            participants: '参加人数',
+                                                            externalVisitors: '外部来訪者',
+                                                            roomId: '部屋'
+                                                        };
 
-                                                    const addedVisitors = newVisitors.filter(nv =>
-                                                        !oldVisitors.some(ov =>
-                                                            ov.name === nv.name && ov.email === nv.email
-                                                        )
-                                                    );
+                                                        let displayValue: React.ReactNode = '';
+                                                        if (change.field === 'startTime' || change.field === 'endTime') {
+                                                            const oldTime = new Date(change.oldValue).toLocaleString('ja-JP', {
+                                                                month: '2-digit',
+                                                                day: '2-digit',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            });
+                                                            const newTime = new Date(change.newValue).toLocaleString('ja-JP', {
+                                                                month: '2-digit',
+                                                                day: '2-digit',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            });
+                                                            displayValue = `${oldTime} → ${newTime}`;
+                                                        } else if (change.field === 'roomId') {
+                                                            const oldRoom = MOCK_ROOMS.find(r => r.id === change.oldValue)?.name || change.oldValue;
+                                                            const newRoom = MOCK_ROOMS.find(r => r.id === change.newValue)?.name || change.newValue;
+                                                            displayValue = `${oldRoom} → ${newRoom}`;
+                                                        } else if (change.field === 'externalVisitors') {
+                                                            const oldVisitors = (change.oldValue as any[]) || [];
+                                                            const newVisitors = (change.newValue as any[]) || [];
 
-                                                    const removedVisitors = oldVisitors.filter(ov =>
-                                                        !newVisitors.some(nv =>
-                                                            nv.name === ov.name && nv.email === ov.email
-                                                        )
-                                                    );
+                                                            const addedVisitors = newVisitors.filter(nv =>
+                                                                !oldVisitors.some(ov =>
+                                                                    ov.name === nv.name && ov.email === nv.email
+                                                                )
+                                                            );
 
-                                                    displayValue = (
-                                                        <div className="space-y-2 mt-1">
-                                                            {addedVisitors.length > 0 && (
-                                                                <div className="bg-green-50 border border-green-200 rounded p-2">
-                                                                    <div className="font-medium text-green-900 text-xs mb-1">➕ 追加</div>
-                                                                    {addedVisitors.map((v, i) => (
-                                                                        <div key={i} className="text-green-700 text-xs pl-2 border-l-2 border-green-300">
-                                                                            <div className="font-medium">{v.name}</div>
-                                                                            <div className="opacity-80">📍 {v.company}</div>
-                                                                            <div className="opacity-80">📧 {v.email}</div>
+                                                            const removedVisitors = oldVisitors.filter(ov =>
+                                                                !newVisitors.some(nv =>
+                                                                    nv.name === ov.name && nv.email === ov.email
+                                                                )
+                                                            );
+
+                                                            displayValue = (
+                                                                <div className="space-y-2 mt-1">
+                                                                    {addedVisitors.length > 0 && (
+                                                                        <div className="bg-green-50 border border-green-200 rounded p-2">
+                                                                            <div className="font-medium text-green-900 text-xs mb-1">➕ 追加</div>
+                                                                            {addedVisitors.map((v, i) => (
+                                                                                <div key={i} className="text-green-700 text-xs pl-2 border-l-2 border-green-300">
+                                                                                    <div className="font-medium">{v.name}</div>
+                                                                                    <div className="opacity-80">📍 {v.company}</div>
+                                                                                    <div className="opacity-80">📧 {v.email}</div>
+                                                                                </div>
+                                                                            ))}
                                                                         </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {removedVisitors.length > 0 && (
-                                                                <div className="bg-red-50 border border-red-200 rounded p-2">
-                                                                    <div className="font-medium text-red-900 text-xs mb-1">➖ 削除</div>
-                                                                    {removedVisitors.map((v, i) => (
-                                                                        <div key={i} className="text-red-700 text-xs pl-2 border-l-2 border-red-300">
-                                                                            <div className="font-medium">{v.name}</div>
-                                                                            <div className="opacity-80">📍 {v.company}</div>
-                                                                            <div className="opacity-80">📧 {v.email}</div>
+                                                                    )}
+                                                                    {removedVisitors.length > 0 && (
+                                                                        <div className="bg-red-50 border border-red-200 rounded p-2">
+                                                                            <div className="font-medium text-red-900 text-xs mb-1">➖ 削除</div>
+                                                                            {removedVisitors.map((v, i) => (
+                                                                                <div key={i} className="text-red-700 text-xs pl-2 border-l-2 border-red-300">
+                                                                                    <div className="font-medium">{v.name}</div>
+                                                                                    <div className="opacity-80">📍 {v.company}</div>
+                                                                                    <div className="opacity-80">📧 {v.email}</div>
+                                                                                </div>
+                                                                            ))}
                                                                         </div>
-                                                                    ))}
+                                                                    )}
+                                                                    <div className="text-xs">{oldVisitors.length}名 → {newVisitors.length}名</div>
                                                                 </div>
-                                                            )}
-                                                            <div className="text-xs">{oldVisitors.length}名 → {newVisitors.length}名</div>
+                                                            );
+                                                        } else {
+                                                            displayValue = `${change.oldValue} → ${change.newValue}`;
+                                                        }
+
+                                                        return (
+                                                            <div key={idx} className="text-orange-700 pl-2 border-l-2 border-orange-300">
+                                                                <span className="font-medium">{fieldNames[change.field] || change.field}:</span> {displayValue}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {res.changeReason && (
+                                                        <div className="mt-2 pt-2 border-t border-orange-200 text-orange-700">
+                                                            <span className="font-medium">変更理由:</span> {res.changeReason}
                                                         </div>
-                                                    );
-                                                } else {
-                                                    displayValue = `${change.oldValue} → ${change.newValue}`;
-                                                }
-
-                                                return (
-                                                    <div key={idx} className="text-orange-700 pl-2 border-l-2 border-orange-300">
-                                                        <span className="font-medium">{fieldNames[change.field] || change.field}:</span> {displayValue}
-                                                    </div>
-                                                );
-                                            })}
-                                            {res.changeReason && (
-                                                <div className="mt-2 pt-2 border-t border-orange-200 text-orange-700">
-                                                    <span className="font-medium">変更理由:</span> {res.changeReason}
+                                                    )}
                                                 </div>
                                             )}
-                                        </div>
-                                    )}
 
-                                    <div className="flex items-center text-muted-foreground">
-                                        <MapPin className="mr-2 h-4 w-4" /> {roomName}
-                                    </div>
-                                    <div className="flex items-center text-muted-foreground">
-                                        <Clock className="mr-2 h-4 w-4" /> {dateStr} {timeStr}
-                                    </div>
-                                    <div className="flex items-center text-muted-foreground">
-                                        <UsersIcon className="mr-2 h-4 w-4" /> {res.participants}名
-                                    </div>
-                                    {res.externalVisitors && res.externalVisitors.length > 0 && (
-                                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-2">
-                                            <div className="font-medium text-blue-900">外部来訪者</div>
-                                            {res.externalVisitors.map((visitor, idx) => (
-                                                <div key={idx} className="text-blue-700 pl-2 border-l-2 border-blue-300">
-                                                    <div className="font-medium">{visitor.name}</div>
-                                                    <div className="text-xs opacity-80">📍 {visitor.company}</div>
-                                                    <div className="text-xs opacity-80">📧 {visitor.email}</div>
+                                            <div className="flex items-center text-muted-foreground">
+                                                <MapPin className="mr-2 h-4 w-4" /> {roomName}
+                                            </div>
+                                            <div className="flex items-center text-muted-foreground">
+                                                <Clock className="mr-2 h-4 w-4" /> {dateStr} {timeStr}
+                                            </div>
+                                            <div className="flex items-center text-muted-foreground">
+                                                <UsersIcon className="mr-2 h-4 w-4" /> {res.participants}名
+                                            </div>
+                                            {res.externalVisitors && res.externalVisitors.length > 0 && (
+                                                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-2">
+                                                    <div className="font-medium text-blue-900">外部来訪者</div>
+                                                    {res.externalVisitors.map((visitor, idx) => (
+                                                        <div key={idx} className="text-blue-700 pl-2 border-l-2 border-blue-300">
+                                                            <div className="font-medium">{visitor.name}</div>
+                                                            <div className="text-xs opacity-80">📍 {visitor.company}</div>
+                                                            <div className="text-xs opacity-80">📧 {visitor.email}</div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {res.rejectionReason && (
-                                        <div className="mt-2 p-2 bg-destructive/10 text-destructive rounded text-xs">
-                                            理由: {res.rejectionReason}
-                                        </div>
-                                    )}
-                                    {res.status === 'pending' && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => {
-                                                setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
-                                            }}
-                                        >
-                                            {res.isChangeRequest ? '変更申請を取り下げる' : '申請を取り下げる'}
-                                        </Button>
-                                    )}
-                                    {res.status === 'approved' && (
-                                        <div className="flex gap-2 mt-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1"
-                                                onClick={() => {
-                                                    setSelectedReservationForChange(res);
-                                                    setIsChangeRequestModalOpen(true);
-                                                }}
-                                            >
-                                                変更
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                onClick={() => {
-                                                    if (confirm('承認済みの予約を取り消しますか？\n\nこの操作は取り消せません。')) {
+                                            )}
+                                            {res.rejectionReason && (
+                                                <div className="mt-2 p-2 bg-destructive/10 text-destructive rounded text-xs">
+                                                    理由: {res.rejectionReason}
+                                                </div>
+                                            )}
+                                            {res.status === 'pending' && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    onClick={() => {
                                                         setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
-                                                    }
-                                                }}
-                                            >
-                                                予約を取り消す
-                                            </Button>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
+                                                    }}
+                                                >
+                                                    {res.isChangeRequest ? '変更申請を取り下げる' : '申請を取り下げる'}
+                                                </Button>
+                                            )}
+                                            {res.status === 'approved' && (
+                                                <div className="flex gap-2 mt-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="flex-1"
+                                                        onClick={() => {
+                                                            setSelectedReservationForChange(res);
+                                                            setIsChangeRequestModalOpen(true);
+                                                        }}
+                                                    >
+                                                        変更
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                        onClick={() => {
+                                                            if (confirm('承認済みの予約を取り消しますか?\n\nこの操作は取り消せません。')) {
+                                                                setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
+                                                            }
+                                                        }}
+                                                    >
+                                                        予約を取り消す
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Past Reservations */}
+                    {pastReservations.length > 0 && (
+                        <div className="space-y-4">
+                            <button
+                                onClick={() => setIsPastReservationsOpen(!isPastReservationsOpen)}
+                                className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-muted-foreground">📁 過去の予約 ({pastReservations.length}件)</h3>
+                                </div>
+                                <span className="text-muted-foreground">
+                                    {isPastReservationsOpen ? '▲' : '▼'}
+                                </span>
+                            </button>
+
+                            {isPastReservationsOpen && pastReservations.map(res => {
+                                const start = new Date(res.startTime);
+                                const end = new Date(res.endTime);
+                                const dateStr = start.toLocaleDateString('ja-JP');
+                                const timeStr = `${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')} - ${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`;
+                                const roomName = MOCK_ROOMS.find(r => r.id === res.roomId)?.name || "不明な部屋";
+
+                                return (
+                                    <Card key={res.id} className="opacity-75">
+                                        <CardHeader className="p-4 pb-2">
+                                            <div className="flex justify-between items-start gap-2 flex-wrap">
+                                                <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
+                                                    {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : res.status === 'cancelled' ? '取消' : '却下'}
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="p-4 pt-2 space-y-2 text-sm">
+                                            <div className="font-semibold text-lg">{res.purpose}</div>
+                                            <div className="flex items-center text-muted-foreground">
+                                                <MapPin className="mr-2 h-4 w-4" /> {roomName}
+                                            </div>
+                                            <div className="flex items-center text-muted-foreground">
+                                                <Clock className="mr-2 h-4 w-4" /> {dateStr} {timeStr}
+                                            </div>
+                                            <div className="flex items-center text-muted-foreground">
+                                                <UsersIcon className="mr-2 h-4 w-4" /> {res.participants}名
+                                            </div>
+                                            {res.rejectionReason && (
+                                                <div className="mt-2 p-2 bg-destructive/10 text-destructive rounded text-xs">
+                                                    理由: {res.rejectionReason}
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
 
