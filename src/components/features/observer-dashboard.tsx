@@ -139,7 +139,7 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                 <div
                                     key={date.toISOString()}
                                     className={cn(
-                                        "min-h-[100px] border rounded-lg p-2 relative",
+                                        "h-[120px] border rounded-lg p-1.5 relative flex flex-col",
                                         isToday && "border-primary border-2",
                                         isPast && "bg-muted/30",
                                         dayOfWeek === 0 && "bg-red-50/50",
@@ -147,7 +147,7 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                     )}
                                 >
                                     <div className={cn(
-                                        "text-sm font-medium mb-1",
+                                        "text-xs font-medium mb-1 flex-shrink-0",
                                         isToday && "text-primary font-bold",
                                         dayOfWeek === 0 && "text-red-600",
                                         dayOfWeek === 6 && "text-blue-600"
@@ -155,7 +155,7 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                         {date.getDate()}
                                     </div>
 
-                                    <div className="space-y-1">
+                                    <div className="flex-1 overflow-hidden space-y-0.5">
                                         {dayReservations.slice(0, 2).map((res) => {
                                             const room = MOCK_ROOMS.find(r => r.id === res.roomId);
                                             const startTime = new Date(res.startTime);
@@ -168,12 +168,14 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                                     onClick={() => handleReservationClick(res)}
                                                     title={`${timeStr} ${room?.name} - ${res.purpose}`}
                                                 >
-                                                    <div className="font-medium truncate">{timeStr} {room?.name.slice(-1)}</div>
+                                                    <div className="font-medium truncate text-[10px] leading-tight">
+                                                        {timeStr} {room?.id === 'room-a' ? 'コラボ' : room?.id === 'room-b' ? '大' : room?.id === 'room-c' ? '小' : room?.name}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
                                         {dayReservations.length > 2 && (
-                                            <div className="text-xs text-center text-muted-foreground bg-muted/50 rounded py-0.5">
+                                            <div className="text-[9px] text-center text-muted-foreground bg-muted/50 rounded py-0.5">
                                                 他 {dayReservations.length - 2}件
                                             </div>
                                         )}
