@@ -388,10 +388,17 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                         return (
                             <Card key={res.id}>
                                 <CardHeader className="p-4 pb-2">
-                                    <div className="flex justify-between items-start">
-                                        <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
-                                            {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : res.status === 'cancelled' ? '取消' : '却下'}
-                                        </Badge>
+                                    <div className="flex justify-between items-start gap-2 flex-wrap">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <Badge variant={res.status === 'approved' ? 'default' : res.status === 'pending' ? 'secondary' : 'destructive'}>
+                                                {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '申請中' : res.status === 'cancelled' ? '取消' : '却下'}
+                                            </Badge>
+                                            {res.isChangeRequest && (
+                                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
+                                                    🔄 変更申請
+                                                </Badge>
+                                            )}
+                                        </div>
                                         {res.status === 'approved' && (
                                             <Button variant="ghost" size="sm" className="h-6 text-xs">QR表示</Button>
                                         )}
@@ -399,6 +406,102 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                 </CardHeader>
                                 <CardContent className="p-4 pt-2 space-y-2 text-sm">
                                     <div className="font-semibold text-lg">{res.purpose}</div>
+
+                                    {res.isChangeRequest && res.changes && res.changes.length > 0 && (
+                                        <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded text-sm space-y-2">
+                                            <div className="font-semibold text-orange-900">📝 変更内容（承認待ち）</div>
+                                            {res.changes.map((change, idx) => {
+                                                const fieldNames: Record<string, string> = {
+                                                    startTime: '開始時刻',
+                                                    endTime: '終了時刻',
+                                                    purpose: '利用目的',
+                                                    participants: '参加人数',
+                                                    externalVisitors: '外部来訪者',
+                                                    roomId: '部屋'
+                                                };
+
+                                                let displayValue: React.ReactNode = '';
+                                                if (change.field === 'startTime' || change.field === 'endTime') {
+                                                    const oldTime = new Date(change.oldValue).toLocaleString('ja-JP', {
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    });
+                                                    const newTime = new Date(change.newValue).toLocaleString('ja-JP', {
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    });
+                                                    displayValue = `${oldTime} → ${newTime}`;
+                                                } else if (change.field === 'roomId') {
+                                                    const oldRoom = MOCK_ROOMS.find(r => r.id === change.oldValue)?.name || change.oldValue;
+                                                    const newRoom = MOCK_ROOMS.find(r => r.id === change.newValue)?.name || change.newValue;
+                                                    displayValue = `${oldRoom} → ${newRoom}`;
+                                                } else if (change.field === 'externalVisitors') {
+                                                    const oldVisitors = (change.oldValue as any[]) || [];
+                                                    const newVisitors = (change.newValue as any[]) || [];
+
+                                                    const addedVisitors = newVisitors.filter(nv =>
+                                                        !oldVisitors.some(ov =>
+                                                            ov.name === nv.name && ov.email === nv.email
+                                                        )
+                                                    );
+
+                                                    const removedVisitors = oldVisitors.filter(ov =>
+                                                        !newVisitors.some(nv =>
+                                                            nv.name === ov.name && nv.email === ov.email
+                                                        )
+                                                    );
+
+                                                    displayValue = (
+                                                        <div className="space-y-2 mt-1">
+                                                            {addedVisitors.length > 0 && (
+                                                                <div className="bg-green-50 border border-green-200 rounded p-2">
+                                                                    <div className="font-medium text-green-900 text-xs mb-1">➕ 追加</div>
+                                                                    {addedVisitors.map((v, i) => (
+                                                                        <div key={i} className="text-green-700 text-xs pl-2 border-l-2 border-green-300">
+                                                                            <div className="font-medium">{v.name}</div>
+                                                                            <div className="opacity-80">📍 {v.company}</div>
+                                                                            <div className="opacity-80">📧 {v.email}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            {removedVisitors.length > 0 && (
+                                                                <div className="bg-red-50 border border-red-200 rounded p-2">
+                                                                    <div className="font-medium text-red-900 text-xs mb-1">➖ 削除</div>
+                                                                    {removedVisitors.map((v, i) => (
+                                                                        <div key={i} className="text-red-700 text-xs pl-2 border-l-2 border-red-300">
+                                                                            <div className="font-medium">{v.name}</div>
+                                                                            <div className="opacity-80">📍 {v.company}</div>
+                                                                            <div className="opacity-80">📧 {v.email}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            <div className="text-xs">{oldVisitors.length}名 → {newVisitors.length}名</div>
+                                                        </div>
+                                                    );
+                                                } else {
+                                                    displayValue = `${change.oldValue} → ${change.newValue}`;
+                                                }
+
+                                                return (
+                                                    <div key={idx} className="text-orange-700 pl-2 border-l-2 border-orange-300">
+                                                        <span className="font-medium">{fieldNames[change.field] || change.field}:</span> {displayValue}
+                                                    </div>
+                                                );
+                                            })}
+                                            {res.changeReason && (
+                                                <div className="mt-2 pt-2 border-t border-orange-200 text-orange-700">
+                                                    <span className="font-medium">変更理由:</span> {res.changeReason}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center text-muted-foreground">
                                         <MapPin className="mr-2 h-4 w-4" /> {roomName}
                                     </div>
@@ -434,7 +537,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                 setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
                                             }}
                                         >
-                                            申請を取り下げる
+                                            {res.isChangeRequest ? '変更申請を取り下げる' : '申請を取り下げる'}
                                         </Button>
                                     )}
                                     {res.status === 'approved' && (
