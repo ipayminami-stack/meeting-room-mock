@@ -329,6 +329,11 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                 const endTime = new Date(res.endTime);
                                                 const timeRange = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}-${endTime.getHours()}:${String(endTime.getMinutes()).padStart(2, '0')}`;
 
+                                                // 部屋名の略称
+                                                const roomAbbr = room?.id === 'room-a' ? 'コラボ' :
+                                                    room?.id === 'room-b' ? '大' :
+                                                        room?.id === 'room-c' ? '小' : room?.name;
+
                                                 return (
                                                     <div
                                                         key={res.id}
@@ -340,7 +345,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                         )}
                                                     >
                                                         <div className="font-semibold truncate text-[11px] leading-tight">
-                                                            {timeRange} {room?.name.slice(-1)}
+                                                            {timeRange} {roomAbbr}
                                                             {isMine && isPending && <span className="ml-0.5">⏳</span>}
                                                         </div>
                                                         <div className="truncate text-[10px] opacity-90 leading-tight">{res.purpose}</div>

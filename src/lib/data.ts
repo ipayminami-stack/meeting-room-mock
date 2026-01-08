@@ -11,9 +11,9 @@ export const MOCK_USERS: User[] = [
 ];
 
 export const MOCK_ROOMS: Room[] = [
-    { id: 'room-a', name: 'コラボレーションルーム', capacity: 4, facilities: ['モニター', 'ホワイトボード'], floor: '秋葉原UDX20F' },
-    { id: 'room-b', name: '会議室（大）', capacity: 6, facilities: ['プロジェクター', 'WEB会議システム'], floor: '秋葉原UDX20F' },
-    { id: 'room-c', name: '会議室（小）', capacity: 8, facilities: ['大型モニター', '防音', 'ホワイトボード'], floor: '秋葉原UDX20F' },
+    { id: 'room-a', name: 'コラボレーションルーム', capacity: 40, facilities: ['モニター', 'ホワイトボード'], floor: '秋葉原UDX20F' },
+    { id: 'room-b', name: '会議室（大）', capacity: 8, facilities: ['プロジェクター', 'WEB会議システム'], floor: '秋葉原UDX20F' },
+    { id: 'room-c', name: '会議室（小）', capacity: 4, facilities: ['大型モニター', '防音', 'ホワイトボード'], floor: '秋葉原UDX20F' },
 ];
 
 // Helper function to create dates
