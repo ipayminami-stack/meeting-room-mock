@@ -18,16 +18,50 @@ export function ApproverDashboard({ user }: ApproverDashboardProps) {
     const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
 
     const handleApprove = (id: string) => {
-        setReservations(reservations.map(r =>
-            r.id === id ? { ...r, status: 'approved', qrCode: 'valid-qr-' + Date.now() } : r
-        ));
+        const reservation = reservations.find(r => r.id === id);
+        if (!reservation) return;
+
+        if (reservation.isChangeRequest && reservation.originalReservationId) {
+            // 変更申請の場合: 元の予約を更新し、変更申請を削除
+            const updatedReservations = reservations.map(r => {
+                if (r.id === reservation.originalReservationId) {
+                    // 元の予約を変更内容で更新
+                    const updated = { ...r };
+                    reservation.changes?.forEach(change => {
+                        if (change.field === 'startTime') updated.startTime = change.newValue;
+                        if (change.field === 'endTime') updated.endTime = change.newValue;
+                        if (change.field === 'roomId') updated.roomId = change.newValue;
+                        if (change.field === 'purpose') updated.purpose = change.newValue;
+                        if (change.field === 'participants') updated.participants = change.newValue;
+                        if (change.field === 'externalVisitors') updated.externalVisitors = change.newValue;
+                    });
+                    return updated;
+                }
+                return r;
+            }).filter(r => r.id !== id); // 変更申請を削除
+
+            setReservations(updatedReservations);
+        } else {
+            // 通常の予約申請の場合
+            setReservations(reservations.map(r =>
+                r.id === id ? { ...r, status: 'approved', qrCode: 'valid-qr-' + Date.now() } : r
+            ));
+        }
     };
 
     const handleReject = (id: string) => {
-        // For simplicity, just strict reject. Ideally open a modal for reason.
-        setReservations(reservations.map(r =>
-            r.id === id ? { ...r, status: 'rejected', rejectionReason: '管理者の判断により却下されました' } : r
-        ));
+        const reservation = reservations.find(r => r.id === id);
+        if (!reservation) return;
+
+        if (reservation.isChangeRequest) {
+            // 変更申請の場合: 変更申請を削除（元の予約は維持）
+            setReservations(reservations.filter(r => r.id !== id));
+        } else {
+            // 通常の予約申請の場合
+            setReservations(reservations.map(r =>
+                r.id === id ? { ...r, status: 'rejected', rejectionReason: '管理者の判断により却下されました' } : r
+            ));
+        }
     };
 
     const pendingList = reservations.filter(r => r.status === 'pending').sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); // FIFO
