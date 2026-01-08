@@ -83,13 +83,72 @@ export function ApproverDashboard({ user }: ApproverDashboardProps) {
                             <CardContent className="p-6">
                                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                     <div className="space-y-2 flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                                             <Badge variant={res.status === 'pending' ? 'secondary' : res.status === 'approved' ? 'default' : 'destructive'}>
                                                 {res.status === 'approved' ? '承認済' : res.status === 'pending' ? '承認待ち' : res.status === 'cancelled' ? '取消' : '却下'}
                                             </Badge>
+                                            {res.isChangeRequest && (
+                                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
+                                                    🔄 変更申請
+                                                </Badge>
+                                            )}
                                             <span className="text-sm text-muted-foreground">申請日時: {created}</span>
                                         </div>
                                         <div className="font-bold text-xl">{res.purpose} <span className="text-base font-normal text-muted-foreground">by {res.userName}</span></div>
+
+                                        {res.isChangeRequest && res.changes && res.changes.length > 0 && (
+                                            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded text-sm space-y-2">
+                                                <div className="font-semibold text-orange-900">📝 変更内容</div>
+                                                {res.changes.map((change, idx) => {
+                                                    const fieldNames: Record<string, string> = {
+                                                        startTime: '開始時刻',
+                                                        endTime: '終了時刻',
+                                                        purpose: '利用目的',
+                                                        participants: '参加人数',
+                                                        externalVisitors: '外部来訪者',
+                                                        roomId: '部屋'
+                                                    };
+
+                                                    let displayValue = '';
+                                                    if (change.field === 'startTime' || change.field === 'endTime') {
+                                                        const oldTime = new Date(change.oldValue).toLocaleString('ja-JP', {
+                                                            month: '2-digit',
+                                                            day: '2-digit',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        });
+                                                        const newTime = new Date(change.newValue).toLocaleString('ja-JP', {
+                                                            month: '2-digit',
+                                                            day: '2-digit',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        });
+                                                        displayValue = `${oldTime} → ${newTime}`;
+                                                    } else if (change.field === 'roomId') {
+                                                        const oldRoom = MOCK_ROOMS.find(r => r.id === change.oldValue)?.name || change.oldValue;
+                                                        const newRoom = MOCK_ROOMS.find(r => r.id === change.newValue)?.name || change.newValue;
+                                                        displayValue = `${oldRoom} → ${newRoom}`;
+                                                    } else if (change.field === 'externalVisitors') {
+                                                        const oldCount = (change.oldValue as any[])?.length || 0;
+                                                        const newCount = (change.newValue as any[])?.length || 0;
+                                                        displayValue = `${oldCount}名 → ${newCount}名`;
+                                                    } else {
+                                                        displayValue = `${change.oldValue} → ${change.newValue}`;
+                                                    }
+
+                                                    return (
+                                                        <div key={idx} className="text-orange-700 pl-2 border-l-2 border-orange-300">
+                                                            <span className="font-medium">{fieldNames[change.field] || change.field}:</span> {displayValue}
+                                                        </div>
+                                                    );
+                                                })}
+                                                {res.changeReason && (
+                                                    <div className="mt-2 pt-2 border-t border-orange-200 text-orange-700">
+                                                        <span className="font-medium">変更理由:</span> {res.changeReason}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
                                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                                             <div className="flex items-center">
