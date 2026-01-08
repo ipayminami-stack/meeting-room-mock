@@ -1,34 +1,44 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { User } from "@/types";
-import { LogOut } from "lucide-react";
 
 interface HeaderProps {
     user: User;
 }
 
 export function Header({ user }: HeaderProps) {
+    const roleNames: Record<string, string> = {
+        applicant: "申請者",
+        approver: "承認者",
+        admin: "管理者",
+        observer: "閲覧者"
+    };
+
     return (
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full">
-            <div className="container flex h-14 items-center justify-between">
+        <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
+            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+                {/* 左側: ロゴとタイトル */}
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="font-bold text-lg flex items-center gap-2">
-                        <span className="text-primary">■</span> 会議室予約
+                    <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div className="text-blue-600 font-bold text-xl">IPA</div>
+                        <div className="h-6 w-px bg-gray-300"></div>
+                        <h1 className="text-base font-semibold text-gray-800">会議室予約システム</h1>
                     </Link>
-                    <nav className="flex items-center gap-4 text-sm font-medium text-muted-foreground ml-4">
-                        <Link href="/dashboard" className="transition-colors hover:text-foreground">ホーム</Link>
-                        {/* Add more links if needed */}
-                    </nav>
                 </div>
 
+                {/* 右側: ユーザー情報 */}
                 <div className="flex items-center gap-4">
-                    <div className="text-sm text-right hidden md:block">
-                        <div className="font-medium leading-none">{user.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{user.department}</div>
+                    <div className="text-sm hidden sm:block">
+                        <span className="font-medium text-gray-800">{user.name}</span>
+                        <span className="text-gray-500 ml-2">({roleNames[user.role] || user.role})</span>
                     </div>
                     <Link href="/">
-                        <Button variant="ghost" size="icon" title="ログアウト">
-                            <LogOut className="h-5 w-5" />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-gray-700 border-gray-300 hover:bg-gray-50"
+                        >
+                            ログアウト
                         </Button>
                     </Link>
                 </div>
