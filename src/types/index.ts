@@ -36,6 +36,15 @@ export interface Reservation {
         name: string;
         email: string;
     }[];
+    // Change request fields
+    isChangeRequest?: boolean;      // 変更申請かどうか
+    originalReservationId?: string; // 変更申請の場合、元の予約ID
+    changes?: {
+        field: 'startTime' | 'endTime' | 'purpose' | 'participants' | 'externalVisitors' | 'roomId';
+        oldValue: any;
+        newValue: any;
+    }[];
+    changeReason?: string;          // 変更理由
 }
 
 // For form submission

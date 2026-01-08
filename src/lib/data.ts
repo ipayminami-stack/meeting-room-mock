@@ -253,4 +253,79 @@ export const MOCK_RESERVATIONS: Reservation[] = [
             }
         ]
     },
+
+    // 変更申請 - 日時変更
+    {
+        id: 'change-req-1',
+        roomId: 'room-a',
+        userId: '5',
+        userName: '鈴木 三郎',
+        startTime: createDate(3, 15, 0),  // 変更後の時間
+        endTime: createDate(3, 17, 0),
+        purpose: '営業戦略会議',
+        participants: 6,
+        status: 'pending',
+        createdAt: createDate(0, 14, 30),
+        isChangeRequest: true,
+        originalReservationId: 'res-2',
+        changes: [
+            {
+                field: 'startTime',
+                oldValue: createDate(1, 14, 0),
+                newValue: createDate(3, 15, 0)
+            },
+            {
+                field: 'endTime',
+                oldValue: createDate(1, 16, 0),
+                newValue: createDate(3, 17, 0)
+            }
+        ],
+        changeReason: '参加者の都合により日時を変更したいです'
+    },
+
+    // 変更申請 - 来訪者追加
+    {
+        id: 'change-req-2',
+        roomId: 'room-b',
+        userId: '1',
+        userName: '叶 太郎',
+        startTime: createDate(2, 10, 0),
+        endTime: createDate(2, 12, 0),
+        purpose: '新規プロジェクトキックオフ',
+        participants: 5,  // 4から5に増加
+        status: 'pending',
+        createdAt: createDate(0, 16, 0),
+        isChangeRequest: true,
+        originalReservationId: 'res-3',
+        changes: [
+            {
+                field: 'participants',
+                oldValue: 4,
+                newValue: 5
+            },
+            {
+                field: 'externalVisitors',
+                oldValue: [
+                    {
+                        company: 'テクノロジー株式会社',
+                        name: '田中 誠',
+                        email: 'tanaka@technology-co.jp'
+                    }
+                ],
+                newValue: [
+                    {
+                        company: 'テクノロジー株式会社',
+                        name: '田中 誠',
+                        email: 'tanaka@technology-co.jp'
+                    },
+                    {
+                        company: 'テクノロジー株式会社',
+                        name: '山本 花子',
+                        email: 'yamamoto@technology-co.jp'
+                    }
+                ]
+            }
+        ],
+        changeReason: '先方から追加の参加者が出たため'
+    },
 ];
