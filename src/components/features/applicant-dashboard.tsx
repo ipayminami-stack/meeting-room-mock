@@ -303,7 +303,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                     <div
                                         key={date.toISOString()}
                                         className={cn(
-                                            "min-h-[140px] border rounded-lg p-2 cursor-pointer transition-colors relative overflow-hidden",
+                                            "h-[120px] border rounded-lg p-1.5 cursor-pointer transition-colors relative flex flex-col",
                                             isToday && "border-primary border-2",
                                             isPast ? "bg-muted/30" : "hover:bg-accent/50",
                                             dayOfWeek === 0 && "bg-red-50/50",
@@ -312,7 +312,7 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                         onClick={() => handleDayClick(date)}
                                     >
                                         <div className={cn(
-                                            "text-sm font-medium mb-1",
+                                            "text-xs font-medium mb-1 flex-shrink-0",
                                             isToday && "text-primary font-bold",
                                             dayOfWeek === 0 && "text-red-600",
                                             dayOfWeek === 6 && "text-blue-600"
@@ -320,8 +320,8 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                             {date.getDate()}
                                         </div>
 
-                                        <div className="space-y-1">
-                                            {dayReservations.slice(0, 3).map((res) => {
+                                        <div className="flex-1 overflow-hidden space-y-0.5">
+                                            {dayReservations.slice(0, 2).map((res) => {
                                                 const isMine = res.userId === user.id;
                                                 const isPending = res.status === 'pending';
                                                 const room = MOCK_ROOMS.find(r => r.id === res.roomId);
@@ -338,23 +338,23 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                     <div
                                                         key={res.id}
                                                         className={cn(
-                                                            "text-xs px-2 py-1.5 rounded",
+                                                            "text-xs px-1.5 py-1 rounded",
                                                             isMine && isPending ? "bg-orange-100 text-orange-700 border border-orange-300" :
                                                                 isMine ? "bg-primary/20 text-primary border border-primary/30" :
                                                                     "bg-muted text-muted-foreground"
                                                         )}
                                                     >
-                                                        <div className="font-semibold truncate text-[11px] leading-tight">
+                                                        <div className="font-semibold truncate text-[10px] leading-tight">
                                                             {timeRange} {roomAbbr}
                                                             {isMine && isPending && <span className="ml-0.5">⏳</span>}
                                                         </div>
-                                                        <div className="truncate text-[10px] opacity-90 leading-tight">{res.purpose}</div>
+                                                        <div className="truncate text-[9px] opacity-90 leading-tight">{res.purpose}</div>
                                                     </div>
                                                 );
                                             })}
-                                            {dayReservations.length > 3 && (
-                                                <div className="text-xs text-center text-muted-foreground bg-muted/50 rounded py-0.5">
-                                                    他 {dayReservations.length - 3}件
+                                            {dayReservations.length > 2 && (
+                                                <div className="text-[9px] text-center text-muted-foreground bg-muted/50 rounded py-0.5">
+                                                    他 {dayReservations.length - 2}件
                                                 </div>
                                             )}
                                         </div>
