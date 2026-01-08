@@ -8,6 +8,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { ReservationModal } from "./reservation-modal";
+import { ChangeRequestModal } from "./change-request-modal";
 import { Calendar, Clock, MapPin, Users as UsersIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,8 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
     const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
     const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false);
     const [isReservationFormModalOpen, setIsReservationFormModalOpen] = useState(false);
+    const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false);
+    const [selectedReservationForChange, setSelectedReservationForChange] = useState<Reservation | undefined>(undefined);
     const [selectedDayForDetail, setSelectedDayForDetail] = useState<Date | undefined>(undefined);
     const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
     const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null);
@@ -154,6 +157,54 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
         setReservations([...reservations, newRes]);
         setIsReservationFormModalOpen(false);
         clearSelection();
+    };
+
+    const handleChangeRequestSubmit = (changes: Reservation['changes'], changeReason: string, needsApproval: boolean) => {
+        if (!selectedReservationForChange) return;
+
+        if (needsApproval) {
+            // 承認が必要な場合は変更申請を作成
+            const changeRequest: Reservation = {
+                ...selectedReservationForChange,
+                id: `change-req-${Date.now()}`,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                isChangeRequest: true,
+                originalReservationId: selectedReservationForChange.id,
+                changes,
+                changeReason,
+            };
+
+            // 変更内容を反映
+            changes?.forEach(change => {
+                if (change.field === 'startTime') changeRequest.startTime = change.newValue;
+                if (change.field === 'endTime') changeRequest.endTime = change.newValue;
+                if (change.field === 'roomId') changeRequest.roomId = change.newValue;
+                if (change.field === 'purpose') changeRequest.purpose = change.newValue;
+                if (change.field === 'participants') changeRequest.participants = change.newValue;
+                if (change.field === 'externalVisitors') changeRequest.externalVisitors = change.newValue;
+            });
+
+            setReservations([...reservations, changeRequest]);
+            alert('変更申請を送信しました。承認者の承認をお待ちください。');
+        } else {
+            // 承認不要な場合は即座に反映
+            const updatedReservation = { ...selectedReservationForChange };
+            changes?.forEach(change => {
+                if (change.field === 'startTime') updatedReservation.startTime = change.newValue;
+                if (change.field === 'endTime') updatedReservation.endTime = change.newValue;
+                if (change.field === 'roomId') updatedReservation.roomId = change.newValue;
+                if (change.field === 'purpose') updatedReservation.purpose = change.newValue;
+                if (change.field === 'participants') updatedReservation.participants = change.newValue;
+                if (change.field === 'externalVisitors') updatedReservation.externalVisitors = change.newValue;
+            });
+
+            setReservations(reservations.map(r => r.id === selectedReservationForChange.id ? updatedReservation : r));
+            alert('変更を保存しました。');
+        }
+
+        setIsChangeRequestModalOpen(false);
+        setSelectedReservationForChange(undefined);
     };
 
     const prevMonth = () => {
@@ -387,18 +438,31 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                         </Button>
                                     )}
                                     {res.status === 'approved' && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => {
-                                                if (confirm('承認済みの予約を取り消しますか？\n\nこの操作は取り消せません。')) {
-                                                    setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
-                                                }
-                                            }}
-                                        >
-                                            予約を取り消す
-                                        </Button>
+                                        <div className="flex gap-2 mt-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() => {
+                                                    setSelectedReservationForChange(res);
+                                                    setIsChangeRequestModalOpen(true);
+                                                }}
+                                            >
+                                                変更
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => {
+                                                    if (confirm('承認済みの予約を取り消しますか？\n\nこの操作は取り消せません。')) {
+                                                        setReservations(reservations.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
+                                                    }
+                                                }}
+                                            >
+                                                予約を取り消す
+                                            </Button>
+                                        </div>
                                     )}
                                 </CardContent>
                             </Card>
@@ -523,6 +587,18 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                 selectedRoom={selectedRoom}
                 selectedTime={selectedTimeForModal}
             />
+
+            {/* Change Request Modal */}
+            {selectedReservationForChange && (
+                <ChangeRequestModal
+                    reservation={selectedReservationForChange}
+                    onClose={() => {
+                        setIsChangeRequestModalOpen(false);
+                        setSelectedReservationForChange(undefined);
+                    }}
+                    onSubmit={handleChangeRequestSubmit}
+                />
+            )}
         </div>
     );
 }
