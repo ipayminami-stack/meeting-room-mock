@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>承認者向け操作マニュアル</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #0066CC;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0066CC;
+            margin-top: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 8px 0;
+        }
+        .toc a {
+            color: #0066CC;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        ol, ul {
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .important {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 30px 0;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 承認者向け操作マニュアル</h1>
+
+        <div class="toc">
+            <h3>目次</h3>
+            <ul>
+                <li><a href="#login">1. ログイン</a></li>
+                <li><a href="#check">2. 予約申請の確認</a></li>
+                <li><a href="#approve">3. 予約の承認</a></li>
+                <li><a href="#reject">4. 予約の却下</a></li>
+                <li><a href="#change">5. 変更申請の処理</a></li>
+                <li><a href="#status">6. 予約状況の確認</a></li>
+            </ul>
+        </div>
+
+        <h2 id="login">ログイン</h2>
+        <img src="/images/login_screen.png" alt="ログイン画面">
+        <ol>
+            <li>ログイン画面でユーザー名とパスワードを入力
+                <ul>
+                    <li>承認者: <code>admin</code> / <code>admin</code></li>
+                </ul>
+            </li>
+            <li>「ログイン」ボタンをクリック</li>
+        </ol>
+
+        <hr>
+
+        <h2 id="check">予約申請の確認</h2>
+
+        <h3>承認待ち一覧</h3>
+        <p>ダッシュボードの「承認待ち」タブに表示される情報：</p>
+        <ul>
+            <li>申請者名</li>
+            <li>日時</li>
+            <li>会議室</li>
+            <li>利用目的</li>
+            <li>参加者情報</li>
+            <li>外部来訪者情報（ある場合）</li>
+        </ul>
+
+        <h3>変更申請の識別</h3>
+        <p>変更申請には以下が表示されます：</p>
+        <ul>
+            <li>🔄 変更申請バッジ</li>
+            <li>変更内容の詳細
+                <ul>
+                    <li>➕ 追加された項目（緑色）</li>
+                    <li>➖ 削除された項目（赤色）</li>
+                </ul>
+            </li>
+            <li>変更理由</li>
+        </ul>
+
+        <hr>
+
+        <h2 id="approve">予約の承認</h2>
+
+        <h3>手順</h3>
+        <ol>
+            <li>
+                <strong>申請内容を確認</strong>
+                <ul>
+                    <li>日時、会議室、利用目的を確認</li>
+                    <li>外部来訪者情報を確認（ある場合）</li>
+                    <li>他の予約との重複がないか確認</li>
+                </ul>
+            </li>
+            <li>
+                <strong>承認ボタンをクリック</strong>
+                <ul>
+                    <li>「承認」ボタンをクリック</li>
+                </ul>
+            </li>
+            <li>
+                <strong>確認</strong>
+                <ul>
+                    <li>承認された予約は「承認済み」タブに移動</li>
+                    <li>申請者に通知されます</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>承認時の確認ポイント</h3>
+        <div class="success">
+            <strong>✅ 日時の妥当性</strong><br>
+            • 業務時間内か<br>
+            • 他の予約と重複していないか<br><br>
+            <strong>✅ 利用目的の明確性</strong><br>
+            • 利用目的が明記されているか<br>
+            • 会議室の用途に適しているか<br><br>
+            <strong>✅ 外部来訪者情報</strong><br>
+            • 必要な情報が揃っているか<br>
+            • セキュリティ上問題ないか
+        </div>
+
+        <hr>
+
+        <h2 id="reject">予約の却下</h2>
+
+        <h3>手順</h3>
+        <ol>
+            <li>
+                <strong>却下理由を確認</strong>
+                <ul>
+                    <li>日時の重複</li>
+                    <li>利用目的が不適切</li>
+                    <li>外部来訪者情報の不備など</li>
+                </ul>
+            </li>
+            <li>
+                <strong>却下ボタンをクリック</strong>
+                <ul>
+                    <li>「却下」ボタンをクリック</li>
+                </ul>
+            </li>
+            <li>
+                <strong>確認</strong>
+                <ul>
+                    <li>却下された予約は「却下済み」タブに移動</li>
+                    <li>申請者に通知されます</li>
+                </ul>
+            </li>
+        </ol>
+
+        <div class="note">
+            <strong>却下の一般的な理由</strong><br>
+            • 予約の重複<br>
+            • 利用目的が不明確<br>
+            • 外部来訪者情報の不足<br>
+            • 業務時間外の申請<br>
+            • 会議室の用途に不適切
+        </div>
+
+        <hr>
+
+        <h2 id="change">変更申請の処理</h2>
+
+        <h3>変更申請の種類</h3>
+        <p><strong>承認が必要な変更:</strong></p>
+        <ul>
+            <li>日時の変更</li>
+            <li>会議室の変更</li>
+            <li>外部来訪者の追加</li>
+        </ul>
+
+        <h3>変更申請の承認手順</h3>
+        <ol>
+            <li>
+                <strong>変更内容を確認</strong>
+                <ul>
+                    <li>🔄 変更申請バッジを確認</li>
+                    <li>変更前後の情報を比較</li>
+                    <li>変更理由を確認</li>
+                </ul>
+            </li>
+            <li>
+                <strong>変更の妥当性を判断</strong>
+                <ul>
+                    <li>変更後の日時に重複がないか</li>
+                    <li>変更理由が妥当か</li>
+                </ul>
+            </li>
+            <li>
+                <strong>承認または却下</strong>
+                <ul>
+                    <li><strong>承認</strong>: 元の予約が変更内容で更新されます</li>
+                    <li><strong>却下</strong>: 元の予約はそのまま維持されます</li>
+                </ul>
+            </li>
+        </ol>
+
+        <div class="important">
+            <strong>変更申請の表示例</strong><br><br>
+            <strong>日時の変更:</strong><br>
+            変更前: 2026/01/10 10:00-11:00<br>
+            変更後: 2026/01/11 14:00-16:00<br><br>
+            <strong>外部来訪者の追加:</strong><br>
+            ➕ 追加: 山田太郎 (株式会社ABC) yamada@example.com<br><br>
+            <strong>外部来訪者の削除:</strong><br>
+            ➖ 削除: 佐藤花子 (株式会社XYZ) sato@example.com
+        </div>
+
+        <hr>
+
+        <h2 id="status">予約状況の確認</h2>
+
+        <h3>月間カレンダー</h3>
+        <p>承認者ダッシュボードには以下が表示されます：</p>
+        <ol>
+            <li>
+                <strong>月間カレンダー</strong>
+                <ul>
+                    <li>全ての予約状況を確認</li>
+                    <li>承認済みの予約のみ表示</li>
+                    <li>日付ごとの予約数を確認</li>
+                </ul>
+            </li>
+            <li>
+                <strong>予約一覧</strong>
+                <ul>
+                    <li>月ごとの予約リスト</li>
+                    <li>ステータスフィルター</li>
+                    <li>会議室フィルター</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>フィルター機能</h3>
+        <p><strong>ステータスフィルター:</strong></p>
+        <ul>
+            <li>すべて</li>
+            <li>承認済み</li>
+            <li>却下済み</li>
+        </ul>
+
+        <p><strong>会議室フィルター:</strong></p>
+        <ul>
+            <li>すべて</li>
+            <li>コラボレーションルーム</li>
+            <li>会議室（大）</li>
+            <li>会議室（小）</li>
+        </ul>
+
+        <hr>
+
+        <h2>よくある質問</h2>
+        <p><strong>Q: 承認はいつまでに行えばいいですか？</strong><br>
+        A: できるだけ早く、遅くとも利用日の前日までに承認してください。</p>
+
+        <p><strong>Q: 変更申請を承認すると元の予約はどうなりますか？</strong><br>
+        A: 元の予約が変更内容で更新されます。変更申請自体は削除されます。</p>
+
+        <p><strong>Q: 変更申請を却下すると元の予約はどうなりますか？</strong><br>
+        A: 元の予約はそのまま維持されます。変更申請のみが削除されます。</p>
+
+        <p><strong>Q: 外部来訪者の情報が不足している場合はどうすればいいですか？</strong><br>
+        A: 申請を却下し、申請者に正確な情報の入力を依頼してください。</p>
+
+        <p><strong>Q: 予約の重複を発見した場合はどうすればいいですか？</strong><br>
+        A: 後から申請された予約を却下するか、申請者に調整を依頼してください。</p>
+    </div>
+</body>
+</html>

@@ -81,7 +81,7 @@ export default function Home() {
 
       <div className="mt-8 flex gap-4 justify-center">
         <a
-          href="/docs/manual_applicant.md"
+          href="/docs/manual_applicant.html"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-primary hover:underline flex items-center gap-1"
@@ -90,7 +90,7 @@ export default function Home() {
         </a>
         <span className="text-muted-foreground">|</span>
         <a
-          href="/docs/manual_approver.md"
+          href="/docs/manual_approver.html"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-primary hover:underline flex items-center gap-1"
