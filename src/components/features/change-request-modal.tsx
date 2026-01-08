@@ -124,13 +124,13 @@ export function ChangeRequestModal({ reservation, onClose, onSubmit }: ChangeReq
                         <div className="grid grid-cols-2 gap-2">
                             <input
                                 type="datetime-local"
-                                value={startTime.toISOString().slice(0, 16)}
+                                value={new Date(startTime.getTime() - startTime.getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                                 onChange={(e) => setStartTime(new Date(e.target.value))}
                                 className="border rounded px-3 py-2 text-sm"
                             />
                             <input
                                 type="datetime-local"
-                                value={endTime.toISOString().slice(0, 16)}
+                                value={new Date(endTime.getTime() - endTime.getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                                 onChange={(e) => setEndTime(new Date(e.target.value))}
                                 className="border rounded px-3 py-2 text-sm"
                             />
