@@ -33,7 +33,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-muted/20">
+    <main className="flex min-h-screen flex-col items-center p-24 bg-muted/20 pt-32">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold tracking-tight mb-2">C区画予約ポータル (Mock)</h1>
         <p className="text-muted-foreground">ログインしてください</p>
