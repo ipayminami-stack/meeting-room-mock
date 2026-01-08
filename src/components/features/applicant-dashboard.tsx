@@ -345,10 +345,10 @@ export function ApplicantDashboard({ user }: ApplicantDashboardProps) {
                                                         )}
                                                     >
                                                         <div className="font-semibold truncate text-[10px] leading-tight">
-                                                            {timeRange} {roomAbbr}
+                                                            {timeRange}
                                                             {isMine && isPending && <span className="ml-0.5">⏳</span>}
                                                         </div>
-                                                        <div className="truncate text-[9px] opacity-90 leading-tight">{res.purpose}</div>
+                                                        <div className="truncate text-[9px] opacity-90 leading-tight">{roomAbbr} | {res.purpose}</div>
                                                     </div>
                                                 );
                                             })}

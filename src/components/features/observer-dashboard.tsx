@@ -159,18 +159,21 @@ export function ObserverDashboard({ user }: ObserverDashboardProps) {
                                         {dayReservations.slice(0, 2).map((res) => {
                                             const room = MOCK_ROOMS.find(r => r.id === res.roomId);
                                             const startTime = new Date(res.startTime);
-                                            const timeStr = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+                                            const endTime = new Date(res.endTime);
+                                            const timeRange = `${startTime.getHours()}:${String(startTime.getMinutes()).padStart(2, '0')}-${endTime.getHours()}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+                                            const roomAbbr = room?.id === 'room-a' ? 'コラボ' : room?.id === 'room-b' ? '大' : room?.id === 'room-c' ? '小' : room?.name;
 
                                             return (
                                                 <div
                                                     key={res.id}
                                                     className="text-xs px-1.5 py-1 rounded bg-muted text-muted-foreground cursor-pointer hover:bg-muted/80"
                                                     onClick={() => handleReservationClick(res)}
-                                                    title={`${timeStr} ${room?.name} - ${res.purpose}`}
+                                                    title={`${timeRange} ${room?.name} - ${res.purpose}`}
                                                 >
                                                     <div className="font-medium truncate text-[10px] leading-tight">
-                                                        {timeStr} {room?.id === 'room-a' ? 'コラボ' : room?.id === 'room-b' ? '大' : room?.id === 'room-c' ? '小' : room?.name}
+                                                        {timeRange}
                                                     </div>
+                                                    <div className="truncate text-[9px] opacity-90 leading-tight">{roomAbbr} | {res.purpose}</div>
                                                 </div>
                                             );
                                         })}
