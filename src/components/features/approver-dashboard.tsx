@@ -109,7 +109,7 @@ export function ApproverDashboard({ user }: ApproverDashboardProps) {
                                                         roomId: '部屋'
                                                     };
 
-                                                    let displayValue = '';
+                                                    let displayValue: React.ReactNode = '';
                                                     if (change.field === 'startTime' || change.field === 'endTime') {
                                                         const oldTime = new Date(change.oldValue).toLocaleString('ja-JP', {
                                                             month: '2-digit',
@@ -129,9 +129,52 @@ export function ApproverDashboard({ user }: ApproverDashboardProps) {
                                                         const newRoom = MOCK_ROOMS.find(r => r.id === change.newValue)?.name || change.newValue;
                                                         displayValue = `${oldRoom} → ${newRoom}`;
                                                     } else if (change.field === 'externalVisitors') {
-                                                        const oldCount = (change.oldValue as any[])?.length || 0;
-                                                        const newCount = (change.newValue as any[])?.length || 0;
-                                                        displayValue = `${oldCount}名 → ${newCount}名`;
+                                                        const oldVisitors = (change.oldValue as any[]) || [];
+                                                        const newVisitors = (change.newValue as any[]) || [];
+
+                                                        // 追加された来訪者
+                                                        const addedVisitors = newVisitors.filter(nv =>
+                                                            !oldVisitors.some(ov =>
+                                                                ov.name === nv.name && ov.email === nv.email
+                                                            )
+                                                        );
+
+                                                        // 削除された来訪者
+                                                        const removedVisitors = oldVisitors.filter(ov =>
+                                                            !newVisitors.some(nv =>
+                                                                nv.name === ov.name && nv.email === ov.email
+                                                            )
+                                                        );
+
+                                                        displayValue = (
+                                                            <div className="space-y-2 mt-1">
+                                                                {addedVisitors.length > 0 && (
+                                                                    <div className="bg-green-50 border border-green-200 rounded p-2">
+                                                                        <div className="font-medium text-green-900 text-xs mb-1">➕ 追加</div>
+                                                                        {addedVisitors.map((v, i) => (
+                                                                            <div key={i} className="text-green-700 text-xs pl-2 border-l-2 border-green-300">
+                                                                                <div className="font-medium">{v.name}</div>
+                                                                                <div className="opacity-80">📍 {v.company}</div>
+                                                                                <div className="opacity-80">📧 {v.email}</div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {removedVisitors.length > 0 && (
+                                                                    <div className="bg-red-50 border border-red-200 rounded p-2">
+                                                                        <div className="font-medium text-red-900 text-xs mb-1">➖ 削除</div>
+                                                                        {removedVisitors.map((v, i) => (
+                                                                            <div key={i} className="text-red-700 text-xs pl-2 border-l-2 border-red-300">
+                                                                                <div className="font-medium">{v.name}</div>
+                                                                                <div className="opacity-80">📍 {v.company}</div>
+                                                                                <div className="opacity-80">📧 {v.email}</div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                <div className="text-xs">{oldVisitors.length}名 → {newVisitors.length}名</div>
+                                                            </div>
+                                                        );
                                                     } else {
                                                         displayValue = `${change.oldValue} → ${change.newValue}`;
                                                     }
