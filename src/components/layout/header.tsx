@@ -17,11 +17,9 @@ export function Header({ user }: HeaderProps) {
     return (
         <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                {/* 左側: ロゴとタイトル */}
+                {/* 左側: タイトル */}
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                        <div className="text-blue-600 font-bold text-xl">IPA</div>
-                        <div className="h-6 w-px bg-gray-300"></div>
+                    <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
                         <h1 className="text-base font-semibold text-gray-800">会議室予約システム</h1>
                     </Link>
                 </div>
