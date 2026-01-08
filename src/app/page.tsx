@@ -87,10 +87,6 @@ export default function Home() {
           <p>admin / admin (吉田 課長)</p>
         </div>
       </div>
-
-      <footer className="mt-12 text-center text-sm text-muted-foreground">
-        © 2026 Information-technology Promotion Agency, Japan（IPA）
-      </footer>
     </main>
   );
 }
