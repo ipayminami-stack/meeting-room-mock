@@ -20,7 +20,7 @@ export function Header({ user }: HeaderProps) {
                 {/* 左側: タイトル */}
                 <div className="flex items-center gap-4">
                     <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
-                        <h1 className="text-lg font-bold text-gray-900 tracking-tight">C区画部屋予約ポータル</h1>
+                        <h1 className="text-lg font-bold text-gray-900 tracking-tight">C区画予約ポータル</h1>
                     </Link>
                 </div>
 
