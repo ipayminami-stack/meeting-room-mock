@@ -79,6 +79,26 @@ export default function Home() {
         </CardContent>
       </Card>
 
+      <div className="mt-8 flex gap-4 justify-center">
+        <a
+          href="/docs/manual_applicant.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary hover:underline flex items-center gap-1"
+        >
+          📖 申請者向けマニュアル
+        </a>
+        <span className="text-muted-foreground">|</span>
+        <a
+          href="/docs/manual_approver.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary hover:underline flex items-center gap-1"
+        >
+          📖 承認者向けマニュアル
+        </a>
+      </div>
+
       <div className="mt-8 text-sm text-muted-foreground text-center">
         <p className="mb-2">テストアカウント:</p>
         <div className="space-y-1">
