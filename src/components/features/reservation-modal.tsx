@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Room } from "@/types";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Upload, Download } from "lucide-react";
 
 interface ExternalVisitor {
     company: string;
@@ -98,6 +98,43 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
         setExternalVisitors(updated);
     };
 
+    const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            const lines = text.split('\n').filter(line => line.trim());
+
+            // ヘッダー行をスキップ
+            const dataLines = lines.slice(1);
+
+            const visitors: ExternalVisitor[] = dataLines.map(line => {
+                const [company, name, email] = line.split(',').map(s => s.trim());
+                return { company: company || '', name: name || '', email: email || '' };
+            }).filter(v => v.company && v.name && v.email);
+
+            if (visitors.length > 0) {
+                setExternalVisitors(visitors);
+                setHasExternalVisitors(true);
+            }
+        };
+        reader.readAsText(file);
+
+        // ファイル入力をリセット
+        event.target.value = '';
+    };
+
+    const downloadCSVTemplate = () => {
+        const template = '会社名,氏名,メールアドレス\n株式会社ABC,山田太郎,yamada@abc.co.jp\nXYZ株式会社,佐藤花子,sato@xyz.co.jp';
+        const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '来訪者テンプレート.csv';
+        link.click();
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="新規予約申請">
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -140,10 +177,56 @@ export function ReservationModal({ isOpen, onClose, onSubmit, selectedRoom, sele
                     </div>
 
                     {hasExternalVisitors && (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
+                            {/* CSV アップロード */}
+                            <div className="border rounded-lg p-4 bg-blue-50/30">
+                                <div className="flex items-center justify-between mb-3">
+                                    <Label className="text-sm font-semibold">CSVファイルで一括登録</Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={downloadCSVTemplate}
+                                        className="h-8 text-xs"
+                                    >
+                                        <Download className="h-3 w-3 mr-1" />
+                                        テンプレートDL
+                                    </Button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleCSVUpload}
+                                        className="flex-1"
+                                        id="csv-upload"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => document.getElementById('csv-upload')?.click()}
+                                        className="h-10"
+                                    >
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        アップロード
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    形式: 会社名,氏名,メールアドレス（ヘッダー行含む）
+                                </p>
+                            </div>
+
+                            {/* 手動入力 */}
                             <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">来訪者リスト</Label>
-                                <Button type="button" size="sm" variant="outline" onClick={addVisitor}>
+                                <Label className="text-sm font-semibold">または手動で入力</Label>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addVisitor}
+                                    className="h-8"
+                                >
                                     <Plus className="h-4 w-4 mr-1" />
                                     来訪者を追加
                                 </Button>

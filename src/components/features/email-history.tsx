@@ -35,8 +35,8 @@ const SAMPLE_EMAIL_HISTORY = [
         to: "kanoh.taro@example.com, yamada@abc.co.jp",
         recipients: ["kanoh.taro@example.com", "yamada@abc.co.jp"],
         recipientStatus: [
-            { email: "kanoh.taro@example.com", status: "delivered" },
-            { email: "yamada@abc.co.jp", status: "delivered" }
+            { email: "kanoh.taro@example.com", status: "delivered", qrCode: "QR-ABC-001-KANOH" },
+            { email: "yamada@abc.co.jp", status: "delivered", qrCode: "QR-ABC-001-YAMADA" }
         ],
         sentAt: "2026-01-08 11:00:00",
         status: "delivered",
@@ -334,25 +334,49 @@ export function EmailHistory({ user }: EmailHistoryProps) {
                                                         <div className="text-xs font-semibold text-muted-foreground mb-2">各宛先の送信状況</div>
                                                         <div className="space-y-2">
                                                             {email.recipientStatus.map((recipient, idx) => (
-                                                                <div key={idx} className="flex items-center justify-between bg-background rounded p-2 text-sm">
-                                                                    <div className="flex items-center gap-2">
+                                                                <div key={idx} className="flex items-center justify-between bg-background rounded p-3 text-sm border">
+                                                                    <div className="flex items-center gap-3 flex-1">
                                                                         {recipient.status === 'delivered' ? (
-                                                                            <CheckCircle className="h-4 w-4 text-green-600" />
+                                                                            <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                                                                         ) : (
-                                                                            <XCircle className="h-4 w-4 text-red-600" />
+                                                                            <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
                                                                         )}
-                                                                        <span>{recipient.email}</span>
+                                                                        <div className="flex-1">
+                                                                            <div className="font-medium">{recipient.email}</div>
+                                                                            {'qrCode' in recipient && recipient.qrCode && (
+                                                                                <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                                                                                    <QrCode className="h-3 w-3" />
+                                                                                    <code className="bg-blue-50 px-1 rounded">{recipient.qrCode}</code>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
                                                                         {recipient.status === 'delivered' ? (
                                                                             <Badge variant="default" className="text-xs">送信成功</Badge>
                                                                         ) : (
-                                                                            <div className="flex items-center gap-2">
-                                                                                <Badge variant="destructive" className="text-xs">バウンス</Badge>
-                                                                                {'bounceReason' in recipient && recipient.bounceReason && (
-                                                                                    <span className="text-xs text-red-600">{recipient.bounceReason}</span>
-                                                                                )}
-                                                                            </div>
+                                                                            <>
+                                                                                <div className="flex flex-col items-end gap-1">
+                                                                                    <Badge variant="destructive" className="text-xs">バウンス</Badge>
+                                                                                    {'bounceReason' in recipient && recipient.bounceReason && (
+                                                                                        <span className="text-xs text-red-600">{recipient.bounceReason}</span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="outline"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setSelectedEmail(email);
+                                                                                        setResendEmail(recipient.email);
+                                                                                        setShowResendModal(true);
+                                                                                    }}
+                                                                                    className="h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
+                                                                                >
+                                                                                    <RefreshCw className="h-3 w-3 mr-1" />
+                                                                                    再送
+                                                                                </Button>
+                                                                            </>
                                                                         )}
                                                                     </div>
                                                                 </div>
