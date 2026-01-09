@@ -6,6 +6,7 @@ import { ApplicantDashboard } from "@/components/features/applicant-dashboard";
 import { ApproverDashboard } from "@/components/features/approver-dashboard";
 import { ObserverDashboard } from "@/components/features/observer-dashboard";
 import { RoomManagement } from "@/components/features/room-management";
+import { ExternalIntegration } from "@/components/features/external-integration";
 import { useRouter, useSearchParams } from "next/navigation";
 import { User } from "@/types";
 import { Suspense, useEffect, useState } from "react";
@@ -63,6 +64,7 @@ function RoleBasedView({ user }: { user: User }) {
       return (
         <div className="space-y-8">
           <ApproverDashboard user={user} />
+          <ExternalIntegration user={user} />
           <ObserverDashboard user={user} />
           <RoomManagement />
         </div>
