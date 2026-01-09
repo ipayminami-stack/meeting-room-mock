@@ -44,7 +44,7 @@ export default function Home() {
           <CardTitle className="text-center">ログイン</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
             <div className="space-y-2">
               <Label htmlFor="username">ユーザー名</Label>
               <Input
@@ -54,6 +54,7 @@ export default function Home() {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="ユーザー名を入力"
                 required
+                autoComplete="off"
               />
             </div>
             <div className="space-y-2">
@@ -65,6 +66,7 @@ export default function Home() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="パスワードを入力"
                 required
+                autoComplete="new-password"
               />
             </div>
             {error && (
