@@ -23,12 +23,20 @@ export function Header({ user }: HeaderProps) {
                         <h1 className="text-lg font-bold text-gray-900 tracking-tight">C区画予約ポータル</h1>
                     </Link>
                     {(user.role === 'approver' || user.role === 'admin') && (
-                        <Link
-                            href={`/integration?userId=${user.id}`}
-                            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-                        >
-                            外部システム連携
-                        </Link>
+                        <>
+                            <Link
+                                href={`/integration?userId=${user.id}`}
+                                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                外部システム連携
+                            </Link>
+                            <Link
+                                href={`/email-history?userId=${user.id}`}
+                                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                メール送信履歴
+                            </Link>
+                        </>
                     )}
                 </div>
 
