@@ -6,7 +6,9 @@ import { MOCK_ROOMS, MOCK_RESERVATIONS } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Clock, MapPin, Users as UsersIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Check, X, Clock, MapPin, Users as UsersIcon, QrCode, Calendar, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ApproverDashboardProps {
