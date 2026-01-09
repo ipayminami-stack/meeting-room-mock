@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Mail, AlertCircle, CheckCircle, XCircle, RefreshCw, Search, QrCode } from "lucide-react";
+import { Mail, AlertCircle, CheckCircle, XCircle, RefreshCw, Search, QrCode, ChevronDown } from "lucide-react";
 
 interface EmailHistoryProps {
     user: any;
@@ -20,6 +20,9 @@ const SAMPLE_EMAIL_HISTORY = [
         subject: "【C区画予約ポータル】予約申請を受け付けました",
         to: "kanoh.taro@example.com",
         recipients: ["kanoh.taro@example.com"],
+        recipientStatus: [
+            { email: "kanoh.taro@example.com", status: "delivered" }
+        ],
         sentAt: "2026-01-08 10:30:00",
         status: "delivered",
         reservationId: "res-001",
@@ -31,6 +34,10 @@ const SAMPLE_EMAIL_HISTORY = [
         subject: "【C区画予約ポータル】予約が承認されました（QRコード添付）",
         to: "kanoh.taro@example.com, yamada@abc.co.jp",
         recipients: ["kanoh.taro@example.com", "yamada@abc.co.jp"],
+        recipientStatus: [
+            { email: "kanoh.taro@example.com", status: "delivered" },
+            { email: "yamada@abc.co.jp", status: "delivered" }
+        ],
         sentAt: "2026-01-08 11:00:00",
         status: "delivered",
         reservationId: "res-001",
@@ -44,6 +51,9 @@ const SAMPLE_EMAIL_HISTORY = [
         subject: "【C区画予約ポータル】変更申請を受け付けました",
         to: "kanoh.jiro@example.com",
         recipients: ["kanoh.jiro@example.com"],
+        recipientStatus: [
+            { email: "kanoh.jiro@example.com", status: "bounced", bounceReason: "Mailbox full" }
+        ],
         sentAt: "2026-01-08 14:00:00",
         status: "bounced",
         bounceReason: "Mailbox full",
@@ -56,6 +66,9 @@ const SAMPLE_EMAIL_HISTORY = [
         subject: "【C区画予約ポータル】予約が承認されました",
         to: "yoshida.manager@example.com",
         recipients: ["yoshida.manager@example.com"],
+        recipientStatus: [
+            { email: "yoshida.manager@example.com", status: "delivered" }
+        ],
         sentAt: "2026-01-08 15:30:00",
         status: "delivered",
         reservationId: "res-003",
@@ -67,6 +80,9 @@ const SAMPLE_EMAIL_HISTORY = [
         subject: "【C区画予約ポータル】予約申請が取り下げられました",
         to: "admin@example.com",
         recipients: ["admin@example.com"],
+        recipientStatus: [
+            { email: "admin@example.com", status: "delivered" }
+        ],
         sentAt: "2026-01-08 16:00:00",
         status: "delivered",
         reservationId: "res-004",
@@ -78,6 +94,11 @@ const SAMPLE_EMAIL_HISTORY = [
         subject: "【C区画予約ポータル】予約がキャンセルされました",
         to: "kanoh.taro@example.com, sato@xyz.co.jp, suzuki@tech.co.jp",
         recipients: ["kanoh.taro@example.com", "sato@xyz.co.jp", "suzuki@tech.co.jp"],
+        recipientStatus: [
+            { email: "kanoh.taro@example.com", status: "delivered" },
+            { email: "sato@xyz.co.jp", status: "bounced", bounceReason: "Invalid recipient" },
+            { email: "suzuki@tech.co.jp", status: "delivered" }
+        ],
         sentAt: "2026-01-09 09:00:00",
         status: "bounced",
         bounceReason: "Invalid recipient",
@@ -106,6 +127,7 @@ export function EmailHistory({ user }: EmailHistoryProps) {
     const [selectedEmail, setSelectedEmail] = useState<typeof SAMPLE_EMAIL_HISTORY[0] | null>(null);
     const [resendEmail, setResendEmail] = useState("");
     const [showResendModal, setShowResendModal] = useState(false);
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
     // 今月のフィルター
     const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
@@ -131,6 +153,16 @@ export function EmailHistory({ user }: EmailHistoryProps) {
         delivered: monthFilteredHistory.filter(e => e.status === 'delivered').length,
         bounced: monthFilteredHistory.filter(e => e.status === 'bounced').length,
         total: monthFilteredHistory.length
+    };
+
+    const toggleRow = (emailId: string) => {
+        const newExpanded = new Set(expandedRows);
+        if (newExpanded.has(emailId)) {
+            newExpanded.delete(emailId);
+        } else {
+            newExpanded.add(emailId);
+        }
+        setExpandedRows(newExpanded);
     };
 
     const handleResend = (email: typeof SAMPLE_EMAIL_HISTORY[0]) => {
@@ -219,73 +251,118 @@ export function EmailHistory({ user }: EmailHistoryProps) {
                             </thead>
                             <tbody>
                                 {filteredHistory.map((email) => (
-                                    <tr
-                                        key={email.id}
-                                        className={`border-b hover:bg-muted/30 transition-colors ${email.status === 'bounced' ? 'bg-red-50/50' : ''
-                                            }`}
-                                    >
-                                        <td className="p-3 text-sm whitespace-nowrap">
-                                            {email.sentAt.substring(5, 16).replace(' ', '\n')}
-                                        </td>
-                                        <td className="p-3">
-                                            <Badge variant="outline" className="text-xs">
-                                                {EMAIL_TYPE_LABELS[email.type]}
-                                            </Badge>
-                                        </td>
-                                        <td className="p-3 text-sm">
-                                            {email.recipients && email.recipients.length > 1 ? (
-                                                <div className="max-w-[200px]" title={email.recipients.join(', ')}>
-                                                    <span className="font-medium">{email.recipients.length}名</span>
-                                                    <span className="text-muted-foreground text-xs ml-1">
-                                                        ({email.recipients[0].split('@')[0]}他)
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="max-w-[200px] truncate" title={email.to}>
-                                                    {email.to}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="p-3 text-sm">
-                                            <div className="space-y-1">
-                                                <div>{email.reservationDetails}</div>
-                                                {email.qrCode && (
-                                                    <div className="flex items-center gap-1 text-xs text-blue-600">
-                                                        <QrCode className="h-3 w-3" />
-                                                        <code className="bg-blue-50 px-1 rounded">{email.qrCode}</code>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="p-3">
-                                            <div className="space-y-1">
-                                                <Badge variant={EMAIL_STATUS_LABELS[email.status].variant} className="text-xs">
-                                                    {email.status === 'delivered' && <CheckCircle className="h-3 w-3 mr-1" />}
-                                                    {email.status === 'bounced' && <XCircle className="h-3 w-3 mr-1" />}
-                                                    {EMAIL_STATUS_LABELS[email.status].label}
+                                    <>
+                                        <tr
+                                            key={email.id}
+                                            onClick={() => email.recipients && email.recipients.length > 1 && toggleRow(email.id)}
+                                            className={`border-b transition-colors ${email.status === 'bounced' ? 'bg-red-50/50' : ''
+                                                } ${email.recipients && email.recipients.length > 1 ? 'cursor-pointer hover:bg-muted/30' : ''}`}
+                                        >
+                                            <td className="p-3 text-sm whitespace-nowrap">
+                                                {email.sentAt.substring(5, 16).replace(' ', '\n')}
+                                            </td>
+                                            <td className="p-3">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {EMAIL_TYPE_LABELS[email.type]}
                                                 </Badge>
-                                                {email.status === 'bounced' && email.bounceReason && (
-                                                    <div className="text-xs text-red-600 flex items-center gap-1">
-                                                        <AlertCircle className="h-3 w-3" />
-                                                        {email.bounceReason}
+                                            </td>
+                                            <td className="p-3 text-sm">
+                                                {email.recipients && email.recipients.length > 1 ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <ChevronDown className={`h-4 w-4 transition-transform ${expandedRows.has(email.id) ? 'rotate-180' : ''}`} />
+                                                        <div className="max-w-[200px]" title={email.recipients.join(', ')}>
+                                                            <span className="font-medium">{email.recipients.length}名</span>
+                                                            <span className="text-muted-foreground text-xs ml-1">
+                                                                ({email.recipients[0].split('@')[0]}他)
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="max-w-[200px] truncate" title={email.to}>
+                                                        {email.to}
                                                     </div>
                                                 )}
-                                            </div>
-                                        </td>
-                                        <td className="p-3">
-                                            {email.status === 'bounced' && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => handleResend(email)}
-                                                    className="h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
-                                                >
-                                                    <RefreshCw className="h-3 w-3 mr-1" />
-                                                    再送
-                                                </Button>
-                                            )}
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td className="p-3 text-sm">
+                                                <div className="space-y-1">
+                                                    <div>{email.reservationDetails}</div>
+                                                    {email.qrCode && (
+                                                        <div className="flex items-center gap-1 text-xs text-blue-600">
+                                                            <QrCode className="h-3 w-3" />
+                                                            <code className="bg-blue-50 px-1 rounded">{email.qrCode}</code>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-3">
+                                                <div className="space-y-1">
+                                                    <Badge variant={EMAIL_STATUS_LABELS[email.status].variant} className="text-xs">
+                                                        {email.status === 'delivered' && <CheckCircle className="h-3 w-3 mr-1" />}
+                                                        {email.status === 'bounced' && <XCircle className="h-3 w-3 mr-1" />}
+                                                        {EMAIL_STATUS_LABELS[email.status].label}
+                                                    </Badge>
+                                                    {email.status === 'bounced' && email.bounceReason && !expandedRows.has(email.id) && (
+                                                        <div className="text-xs text-red-600 flex items-center gap-1">
+                                                            <AlertCircle className="h-3 w-3" />
+                                                            {email.bounceReason}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-3">
+                                                {email.status === 'bounced' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleResend(email);
+                                                        }}
+                                                        className="h-7 text-xs border-red-300 text-red-700 hover:bg-red-50"
+                                                    >
+                                                        <RefreshCw className="h-3 w-3 mr-1" />
+                                                        再送
+                                                    </Button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                        {/* 展開行: 各宛先の送信状況 */}
+                                        {expandedRows.has(email.id) && email.recipientStatus && (
+                                            <tr key={`${email.id}-expanded`} className="bg-muted/20">
+                                                <td colSpan={6} className="p-0">
+                                                    <div className="px-6 py-3">
+                                                        <div className="text-xs font-semibold text-muted-foreground mb-2">各宛先の送信状況</div>
+                                                        <div className="space-y-2">
+                                                            {email.recipientStatus.map((recipient, idx) => (
+                                                                <div key={idx} className="flex items-center justify-between bg-background rounded p-2 text-sm">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {recipient.status === 'delivered' ? (
+                                                                            <CheckCircle className="h-4 w-4 text-green-600" />
+                                                                        ) : (
+                                                                            <XCircle className="h-4 w-4 text-red-600" />
+                                                                        )}
+                                                                        <span>{recipient.email}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {recipient.status === 'delivered' ? (
+                                                                            <Badge variant="default" className="text-xs">送信成功</Badge>
+                                                                        ) : (
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge variant="destructive" className="text-xs">バウンス</Badge>
+                                                                                {'bounceReason' in recipient && recipient.bounceReason && (
+                                                                                    <span className="text-xs text-red-600">{recipient.bounceReason}</span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </>
                                 ))}
                             </tbody>
                         </table>
