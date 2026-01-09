@@ -115,7 +115,10 @@ export function EmailHistory({ user }: EmailHistoryProps) {
         email.to.toLowerCase().includes(searchQuery.toLowerCase()) ||
         email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
         email.reservationDetails.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ).sort((a, b) => {
+        // 送信日時の降順（新しい順）
+        return new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime();
+    });
 
     // 月の統計
     const monthStats = {
