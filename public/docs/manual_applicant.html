@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,73 +14,89 @@
             padding: 20px;
             background-color: #f5f5f5;
         }
+
         .container {
             background: white;
             padding: 40px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
             color: #333;
             border-bottom: 3px solid #0066CC;
             padding-bottom: 10px;
         }
+
         h2 {
             color: #0066CC;
             margin-top: 30px;
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 8px;
         }
+
         h3 {
             color: #555;
             margin-top: 20px;
         }
+
         img {
             max-width: 100%;
             height: auto;
             border: 1px solid #ddd;
             border-radius: 4px;
             margin: 20px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
+
         .toc {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 4px;
             margin-bottom: 30px;
         }
+
         .toc ul {
             list-style: none;
             padding-left: 0;
         }
+
         .toc li {
             margin: 8px 0;
         }
+
         .toc a {
             color: #0066CC;
             text-decoration: none;
         }
+
         .toc a:hover {
             text-decoration: underline;
         }
-        ol, ul {
+
+        ol,
+        ul {
             margin: 15px 0;
         }
+
         li {
             margin: 8px 0;
         }
+
         .note {
             background: #fff3cd;
             border-left: 4px solid #ffc107;
             padding: 15px;
             margin: 20px 0;
         }
+
         .important {
             background: #d1ecf1;
             border-left: 4px solid #0c5460;
             padding: 15px;
             margin: 20px 0;
         }
+
         hr {
             border: none;
             border-top: 1px solid #e0e0e0;
@@ -87,6 +104,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>📖 申請者向け操作マニュアル</h1>
@@ -141,8 +159,21 @@
                 <strong>外部来訪者の登録（必要な場合）</strong>
                 <ul>
                     <li>「外部来訪者あり」にチェック</li>
-                    <li>来訪者の会社名、氏名、メールアドレスを入力</li>
-                    <li>複数の来訪者がいる場合は「来訪者を追加」ボタンで追加</li>
+                    <li><strong>方法1: CSVファイルで一括登録</strong>
+                        <ul>
+                            <li>「テンプレートDL」ボタンでCSVテンプレートをダウンロード</li>
+                            <li>Excelなどで来訪者情報を入力（会社名、氏名、メールアドレス）</li>
+                            <li>CSVファイルを保存</li>
+                            <li>「アップロード」ボタンでファイルを選択</li>
+                            <li>自動的に来訪者リストに反映されます</li>
+                        </ul>
+                    </li>
+                    <li><strong>方法2: 手動で入力</strong>
+                        <ul>
+                            <li>来訪者の会社名、氏名、メールアドレスを入力</li>
+                            <li>複数の来訪者がいる場合は「来訪者を追加」ボタンで追加</li>
+                        </ul>
+                    </li>
                 </ul>
             </li>
             <li>
@@ -153,10 +184,18 @@
             </li>
         </ol>
 
+        <div class="note">
+            <strong>CSVファイルの形式:</strong><br>
+            会社名,氏名,メールアドレス<br>
+            株式会社ABC,山田太郎,yamada@abc.co.jp<br>
+            XYZ株式会社,佐藤花子,sato@xyz.co.jp
+        </div>
+
         <div class="important">
             <strong>注意事項</strong><br>
             • 予約は承認者の承認が必要です<br>
-            • 承認されるまで予約は確定しません
+            • 承認されるまで予約は確定しません<br>
+            • コラボレーションルームの予約には来訪者ごとにQRコードが発行されます
         </div>
 
         <hr>
@@ -267,16 +306,17 @@
 
         <h2>よくある質問</h2>
         <p><strong>Q: 予約はいつまでに申請すればいいですか？</strong><br>
-        A: 利用日の前日までに申請してください。</p>
+            A: 利用日の前日までに申請してください。</p>
 
         <p><strong>Q: 予約の承認にはどのくらい時間がかかりますか？</strong><br>
-        A: 承認者の確認次第ですが、通常1営業日以内に承認されます。</p>
+            A: 承認者の確認次第ですが、通常1営業日以内に承認されます。</p>
 
         <p><strong>Q: 外部来訪者の情報は必須ですか？</strong><br>
-        A: 外部来訪者がいる場合は必須です。セキュリティ管理のため正確な情報を入力してください。</p>
+            A: 外部来訪者がいる場合は必須です。セキュリティ管理のため正確な情報を入力してください。</p>
 
         <p><strong>Q: 予約を変更したいのですが、承認が必要ですか？</strong><br>
-        A: 日時や会議室の変更、外部来訪者の追加は承認が必要です。参加者や来訪者の削減は即座に反映されます。</p>
+            A: 日時や会議室の変更、外部来訪者の追加は承認が必要です。参加者や来訪者の削減は即座に反映されます。</p>
     </div>
 </body>
+
 </html>
