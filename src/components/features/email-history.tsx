@@ -50,14 +50,12 @@ const SAMPLE_EMAIL_HISTORY = [
     {
         id: "email-004",
         type: "approved",
-        subject: "【C区画予約ポータル】予約が承認されました（QRコード添付）",
+        subject: "【C区画予約ポータル】予約が承認されました",
         to: "yoshida.manager@example.com",
         sentAt: "2026-01-08 15:30:00",
         status: "delivered",
         reservationId: "res-003",
-        reservationDetails: "会議室（小） / 2026-01-12 10:00-12:00",
-        qrCode: "QR-XYZ-003-20260112",
-        hasAttachment: true
+        reservationDetails: "会議室（小） / 2026-01-12 10:00-12:00"
     },
     {
         id: "email-005",
@@ -97,17 +95,34 @@ const EMAIL_STATUS_LABELS: Record<string, { label: string; variant: "default" | 
 };
 
 export function EmailHistory({ user }: EmailHistoryProps) {
-    const [emailHistory, setEmailHistory] = useState(SAMPLE_EMAIL_HISTORY);
+    const [emailHistory] = useState(SAMPLE_EMAIL_HISTORY);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedEmail, setSelectedEmail] = useState<typeof SAMPLE_EMAIL_HISTORY[0] | null>(null);
     const [resendEmail, setResendEmail] = useState("");
     const [showResendModal, setShowResendModal] = useState(false);
 
-    const filteredHistory = emailHistory.filter(email =>
+    // 今月のフィルター
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+    // 月でフィルタリング
+    const monthFilteredHistory = emailHistory.filter(email =>
+        email.sentAt.substring(0, 7) === selectedMonth
+    );
+
+    // 検索でフィルタリング
+    const filteredHistory = monthFilteredHistory.filter(email =>
         email.to.toLowerCase().includes(searchQuery.toLowerCase()) ||
         email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
         email.reservationDetails.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // 月の統計
+    const monthStats = {
+        delivered: monthFilteredHistory.filter(e => e.status === 'delivered').length,
+        bounced: monthFilteredHistory.filter(e => e.status === 'bounced').length,
+        total: monthFilteredHistory.length
+    };
 
     const handleResend = (email: typeof SAMPLE_EMAIL_HISTORY[0]) => {
         setSelectedEmail(email);
@@ -117,22 +132,10 @@ export function EmailHistory({ user }: EmailHistoryProps) {
 
     const handleResendSubmit = () => {
         if (!selectedEmail) return;
-
-        // 再送処理（実際にはAPIコール）
-        const newEmail = {
-            ...selectedEmail,
-            id: `email-resend-${Date.now()}`,
-            to: resendEmail,
-            sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            status: "delivered" as const,
-            bounceReason: undefined
-        };
-
-        setEmailHistory([newEmail, ...emailHistory]);
+        alert(`${resendEmail} に再送しました`);
         setShowResendModal(false);
         setSelectedEmail(null);
         setResendEmail("");
-        alert(`${resendEmail} に再送しました`);
     };
 
     return (
@@ -141,6 +144,37 @@ export function EmailHistory({ user }: EmailHistoryProps) {
                 <h2 className="text-2xl font-bold tracking-tight">メール送信履歴</h2>
                 <p className="text-muted-foreground">予約システムから送信されたメールの履歴とステータス</p>
             </div>
+
+            {/* 月間統計（コンパクト） */}
+            <Card>
+                <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Label>表示月:</Label>
+                            <Input
+                                type="month"
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="w-40"
+                            />
+                        </div>
+                        <div className="flex gap-6 text-sm">
+                            <div className="text-center">
+                                <p className="text-xl font-bold text-green-600">{monthStats.delivered}</p>
+                                <p className="text-xs text-muted-foreground">送信成功</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xl font-bold text-red-600">{monthStats.bounced}</p>
+                                <p className="text-xs text-muted-foreground">バウンス</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xl font-bold text-gray-600">{monthStats.total}</p>
+                                <p className="text-xs text-muted-foreground">総送信数</p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* 検索バー */}
             <Card>
@@ -301,35 +335,6 @@ export function EmailHistory({ user }: EmailHistoryProps) {
                     </Card>
                 </div>
             )}
-
-            {/* 統計情報 */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>送信統計</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-green-600">
-                                {emailHistory.filter(e => e.status === 'delivered').length}
-                            </p>
-                            <p className="text-sm text-muted-foreground">送信成功</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-red-600">
-                                {emailHistory.filter(e => e.status === 'bounced').length}
-                            </p>
-                            <p className="text-sm text-muted-foreground">バウンス</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-gray-600">
-                                {emailHistory.length}
-                            </p>
-                            <p className="text-sm text-muted-foreground">総送信数</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 }
