@@ -19,6 +19,7 @@ const SAMPLE_EMAIL_HISTORY = [
         type: "reservation_received",
         subject: "【C区画予約ポータル】予約申請を受け付けました",
         to: "kanoh.taro@example.com",
+        recipients: ["kanoh.taro@example.com"],
         sentAt: "2026-01-08 10:30:00",
         status: "delivered",
         reservationId: "res-001",
@@ -28,7 +29,8 @@ const SAMPLE_EMAIL_HISTORY = [
         id: "email-002",
         type: "approved",
         subject: "【C区画予約ポータル】予約が承認されました（QRコード添付）",
-        to: "kanoh.taro@example.com",
+        to: "kanoh.taro@example.com, yamada@abc.co.jp",
+        recipients: ["kanoh.taro@example.com", "yamada@abc.co.jp"],
         sentAt: "2026-01-08 11:00:00",
         status: "delivered",
         reservationId: "res-001",
@@ -41,6 +43,7 @@ const SAMPLE_EMAIL_HISTORY = [
         type: "change_request_received",
         subject: "【C区画予約ポータル】変更申請を受け付けました",
         to: "kanoh.jiro@example.com",
+        recipients: ["kanoh.jiro@example.com"],
         sentAt: "2026-01-08 14:00:00",
         status: "bounced",
         bounceReason: "Mailbox full",
@@ -52,6 +55,7 @@ const SAMPLE_EMAIL_HISTORY = [
         type: "approved",
         subject: "【C区画予約ポータル】予約が承認されました",
         to: "yoshida.manager@example.com",
+        recipients: ["yoshida.manager@example.com"],
         sentAt: "2026-01-08 15:30:00",
         status: "delivered",
         reservationId: "res-003",
@@ -62,6 +66,7 @@ const SAMPLE_EMAIL_HISTORY = [
         type: "withdrawal",
         subject: "【C区画予約ポータル】予約申請が取り下げられました",
         to: "admin@example.com",
+        recipients: ["admin@example.com"],
         sentAt: "2026-01-08 16:00:00",
         status: "delivered",
         reservationId: "res-004",
@@ -71,7 +76,8 @@ const SAMPLE_EMAIL_HISTORY = [
         id: "email-006",
         type: "cancellation",
         subject: "【C区画予約ポータル】予約がキャンセルされました",
-        to: "kanoh.taro@example.com",
+        to: "kanoh.taro@example.com, sato@xyz.co.jp, suzuki@tech.co.jp",
+        recipients: ["kanoh.taro@example.com", "sato@xyz.co.jp", "suzuki@tech.co.jp"],
         sentAt: "2026-01-09 09:00:00",
         status: "bounced",
         bounceReason: "Invalid recipient",
@@ -227,9 +233,18 @@ export function EmailHistory({ user }: EmailHistoryProps) {
                                             </Badge>
                                         </td>
                                         <td className="p-3 text-sm">
-                                            <div className="max-w-[200px] truncate" title={email.to}>
-                                                {email.to}
-                                            </div>
+                                            {email.recipients && email.recipients.length > 1 ? (
+                                                <div className="max-w-[200px]" title={email.recipients.join(', ')}>
+                                                    <span className="font-medium">{email.recipients.length}名</span>
+                                                    <span className="text-muted-foreground text-xs ml-1">
+                                                        ({email.recipients[0].split('@')[0]}他)
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="max-w-[200px] truncate" title={email.to}>
+                                                    {email.to}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="p-3 text-sm">
                                             <div className="space-y-1">
